@@ -1,0 +1,16 @@
+.*
+
+!.gitignore
+!.idea
+!.travis.yml
+!.jshintrc
+
+*~
+*.kate-swp
+*.swp
+
+node_modules
+lib-cov
+
+.idea/workspace.xml
+npm-debug.log
