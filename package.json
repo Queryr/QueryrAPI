@@ -31,15 +31,19 @@
 	},
 
 	"devDependencies": {
-		"grunt-cli": "0.1.9",
 		"grunt": "~0.4.1",
+		"grunt-cli": "0.1.9",
 		"grunt-contrib-jshint": "~0.6.3",
 		"grunt-contrib-nodeunit": "~0.2.0",
 		"grunt-contrib-watch": "~0.5.3",
+
 		"jshint": "2.x",
 		"nodeunit": "~0.8.1",
+		"jscoverage": "*",
 		"coveralls": "~2.2",
-		"jscoverage": "*"
+
+		"ask-js": "*",
+		"express": "3.x"
 	},
 
 	"main": "index.js",
