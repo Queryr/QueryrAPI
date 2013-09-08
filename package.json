@@ -32,7 +32,7 @@
 
 	"devDependencies": {
 		"grunt": "~0.4.1",
-		"grunt-cli": "0.1.9",
+		"grunt-cli": "~0.1.9",
 		"grunt-contrib-jshint": "~0.6.3",
 		"grunt-contrib-nodeunit": "~0.2.0",
 		"grunt-contrib-watch": "~0.5.3",
@@ -43,7 +43,8 @@
 		"coveralls": "~2.2",
 
 		"ask-js": "*",
-		"express": "3.x"
+		"express": "3.x",
+		"jade": "*"
 	},
 
 	"main": "index.js",
@@ -51,6 +52,6 @@
 	"scripts": {
 		"start": "node api.js",
 		"test": "./node_modules/.bin/grunt",
-		"coveralls": "jscoverage lib && TEST_COV=1 nodeunit --reporter=lcov test | coveralls"
+		"coveralls": "jscoverage src && TEST_COV=1 nodeunit --reporter=lcov test | coveralls"
 	}
 }

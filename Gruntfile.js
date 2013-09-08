@@ -17,11 +17,8 @@ module.exports = function(grunt) {
 			options: {
 				jshintrc: '.jshintrc'
 			},
-			gruntfile: {
-				src: 'Gruntfile.js'
-			},
-			package: {
-				src: 'package.json'
+			projectBase: {
+				src: '*.js'
 			},
 			src: {
 				src: ['src/**/*.js']
@@ -36,9 +33,9 @@ module.exports = function(grunt) {
 				files: ['**/*.js'],
 				tasks: ['jshint', 'nodeunit']
 			},
-			gruntfile: {
-				files: '<%= jshint.gruntfile.src %>',
-				tasks: ['jshint:gruntfile']
+			projectBase: {
+				files: '<%= jshint.projectBase.src %>',
+				tasks: ['jshint:projectBase', 'nodeunit']
 			},
 			src: {
 				files: '<%= jshint.src.src %>',
