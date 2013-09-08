@@ -8,3 +8,9 @@ exports.index = function(req, res) {
 		}
 	);
 };
+
+exports.entities = require('./entities');
+exports.queries = require('./queries');
+exports.results = require('./results');
+exports.run = require('./run');
+exports.users = require('./users');

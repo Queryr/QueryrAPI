@@ -4,7 +4,6 @@ var express = require('express');
 var http = require('http');
 
 var routes = require('./src/routes');
-var query = require('./src/routes/query');
 
 var app = express();
 
@@ -24,10 +23,15 @@ if (app.get('env') === 'development') {
 
 app.get('/', routes.index);
 
-app.get('/queries', query.list);
-app.get('/queries/:query', query.show);
-app.post('/queries/:query', query.create);
-app.delete('/queries/:query', query.delete);
+// https://github.com/JeroenDeDauw/BeyondWikidata/blob/master/ApiSpec.md
+
+app.get('/queries', routes.queries.list);
+app.get('/queries/:query', routes.queries.show);
+app.post('/queries/:query', routes.queries.create);
+app.delete('/queries/:query', routes.queries.delete);
+app.get('/queries/:query/results', routes.queries.showResults);
+
+
 
 http.createServer(app).listen(app.get('port'), function() {
 	console.log('Express server listening on port ' + app.get('port'));

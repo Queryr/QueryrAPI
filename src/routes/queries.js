@@ -17,3 +17,7 @@ exports.create = function(req, res) {
 exports.delete = function(req, res) {
 	// TODO
 };
+
+exports.showResults = function(req, res) {
+	// TODO
+};
