@@ -1,12 +1,14 @@
 "use strict";
 
 exports.list = function(req, res) {
-	res.send([]);
+	var queries = []; // TODO
+
+	res.send(queries);
 };
 
 exports.show = function(req, res) {
 	res.send({
-		'query': 'json'
+		'query': req.params.query
 	});
 };
 
