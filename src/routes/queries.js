@@ -8,7 +8,13 @@ exports.list = function(req, res) {
 
 exports.show = function(req, res) {
 	res.send({
-		'query': req.params.query
+		'result': {
+			'result': {
+				'this will be': 'a query result object serialization'
+			},
+			'some extra info such as': 'execution time might be here',
+			'provided query id': req.params.query
+		}
 	});
 };
 
