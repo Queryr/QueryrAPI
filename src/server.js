@@ -3,8 +3,6 @@
 var express = require('express');
 var http = require('http');
 
-var routes = require('./routes');
-
 var app = express();
 
 app.set('port', process.env.PORT || 3000);
@@ -24,12 +22,20 @@ if (app.get('env') === 'development') {
 exports.app = app;
 
 exports.start = function(log) {
-	routes.setup(app);
+	var routeSetup = require('./routeSetup');
+
+	routeSetup.run(app);
 
 	http.createServer(app).listen(
 		app.get('port'),
 		function() {
-			log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);
+			if ( log !== undefined ) {
+				log(
+					"Express server listening on port %d in %s mode",
+					app.get('port'),
+					app.settings.env
+				);
+			}
 		}
 	);
 };

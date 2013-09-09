@@ -1,6 +1,6 @@
 'use strict';
 
-exports.setup = function(app) {
+exports.run = function(app) {
 	var routes = require('./routes/index');
 
 	app.get('/', routes.index);
