@@ -9,11 +9,9 @@
 *~
 *.kate-swp
 *.swp
+*.log
 
 node_modules
 lib-cov
 
 .idea/workspace.xml
-npm-debug.log
-
-logs/
