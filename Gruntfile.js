@@ -51,6 +51,12 @@ module.exports = function(grunt) {
 	grunt.task.registerTask(
 		'clean',
 		'Remove build files, log files, etc',
+		['removelogs']
+	);
+
+	grunt.task.registerTask(
+		'removelogs',
+		'Remove the log files',
 		function() {
 			var logFiles = grunt.file.expand('logs/*.log');
 

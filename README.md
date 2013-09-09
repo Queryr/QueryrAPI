@@ -9,6 +9,8 @@ When not already done so, install the dependencies with: npm install
 
 Running the tests: npm test
 
+To see all available build commands: grunt --help
+
 ## License
 
 Copyright (c) 2013, Jeroen De Dauw
