@@ -44,7 +44,8 @@
 
 		"ask-js": "*",
 		"express": "3.x",
-		"jade": "*"
+		"jade": "*",
+		"winston": "*"
 	},
 
 	"main": "index.js",
