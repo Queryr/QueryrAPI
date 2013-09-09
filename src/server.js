@@ -23,13 +23,13 @@ if (app.get('env') === 'development') {
 
 exports.app = app;
 
-exports.start = function() {
+exports.start = function(log) {
 	routes.setup(app);
 
 	http.createServer(app).listen(
 		app.get('port'),
 		function() {
-			console.log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);
+			log("Express server listening on port %d in %s mode", app.get('port'), app.settings.env);
 		}
 	);
 };
