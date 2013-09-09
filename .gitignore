@@ -16,4 +16,4 @@ lib-cov
 .idea/workspace.xml
 npm-debug.log
 
-logs/
+*.log
