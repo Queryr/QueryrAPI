@@ -48,4 +48,21 @@ module.exports = function(grunt) {
 		}
 	});
 
+	grunt.task.registerTask(
+		'clean',
+		'Remove build files, log files, etc',
+		function() {
+			var logFiles = grunt.file.expand('logs/*.log');
+
+			if ( logFiles.length > 0 ) {
+				grunt.log.write('Deleting log files... ');
+				grunt.file.delete(logFiles);
+				grunt.log.writeln('log files deleted.');
+			}
+			else {
+				grunt.log.writeln('No log files to be deleted.');
+			}
+		}
+	);
+
 };
