@@ -19,6 +19,8 @@ if (app.get('env') === 'development') {
 	app.use(express.errorHandler());
 }
 
+var server = http.createServer(app);
+
 exports.app = app;
 
 exports.start = function(log) {
@@ -26,7 +28,7 @@ exports.start = function(log) {
 
 	routeSetup.run(app);
 
-	http.createServer(app).listen(
+	server.listen(
 		app.get('port'),
 		function() {
 			if ( log !== undefined ) {
@@ -38,4 +40,8 @@ exports.start = function(log) {
 			}
 		}
 	);
+};
+
+exports.stop = function() {
+	server.close();
 };
