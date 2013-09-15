@@ -7,15 +7,30 @@ exports.list = function(req, res) {
 };
 
 exports.show = function(req, res) {
-	res.send({
-		'result': {
-			'result': {
-				'this will be': 'a query result object serialization'
-			},
-			'some extra info such as': 'execution time might be here',
-			'provided query id': req.params.query
+	var QueryDefinitionFetcher = require('./../interactors').QueryDefinitionFetcher;
+	var QueryDefinitionRequest = require('./../requests').QueryDefinitionRequest;
+
+	// TODO: figure out how to manage dependencies for interactors properly
+	var fetcher = new QueryDefinitionFetcher();
+
+	fetcher.once(
+		'fetched',
+		function(queryDefinitionResponse) {
+			res.send(
+				{
+					'result': queryDefinitionResponse.getQueryDefinition(),
+					'meta': {
+						'executionTime': 1337
+					},
+					'request': {
+						'id': req.params.query
+					}
+				}
+			);
 		}
-	});
+	);
+
+	fetcher.fetch(new QueryDefinitionRequest(req.params.query));
 };
 
 exports.create = function(req, res) {
