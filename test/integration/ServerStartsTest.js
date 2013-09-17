@@ -19,7 +19,7 @@ function httpGet(url, callback) {
 	});
 }
 
-exports['test'] = {
+exports.test = {
 
 	setUp: function(done) {
 		done();
