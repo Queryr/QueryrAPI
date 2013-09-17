@@ -1,6 +1,6 @@
 'use strict';
 
-exports['queryr'] = {
+exports.queryr = {
 
 	setUp: function(done) {
 		done();
