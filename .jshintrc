@@ -15,5 +15,8 @@
 	"maxparams": 4,
 	"maxdepth": 3,
 	"maxcomplexity": 20,
-	"maxlen": 120
+	"maxlen": 120,
+	"laxbreak": true,
+	"latedef": false,
+	"supernew": true
 }
