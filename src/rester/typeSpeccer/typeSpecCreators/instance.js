@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function( typeSpecBuilder ) {
-	return typeSpecBuilder.typeSpec()
+	return typeSpecBuilder.typeSpec( 'instance' )
 		.requires( 'of' )
 		.use( function() {
 			return this.value instanceof this.options.of;

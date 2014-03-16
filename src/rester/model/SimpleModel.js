@@ -88,7 +88,7 @@ SimpleModel.prototype = {
 	 * @throws {Error} If field is not valid
 	 */
 	assertIsValidFieldValue: function( fieldName, value ) {
-		throw Error( 'Abstract implementation of assertIsValidFieldValue not overwritten' );
+		throw new Error( 'Abstract implementation of assertIsValidFieldValue not overwritten' );
 	}
 };
 

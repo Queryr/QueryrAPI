@@ -8,7 +8,7 @@ var ECMA_SCRIPT_TYPES = [ // TODO: Complete list.
 // TODO: perhaps just have "basic types" instead of ECMA script types. E.g. "number" could then
 //       work slightly different; only allow real numbers, no NaN and infinite.
 
-var Assertions = require( '../assertions/Validators' );
+var Validators = require( '../assertions/Validators' );
 var commonAssertions = require( '../assertions/basicValidators' )( new Validators() );
 
 var TypeSpecBuilder = require( '../TypeSpecBuilder' );

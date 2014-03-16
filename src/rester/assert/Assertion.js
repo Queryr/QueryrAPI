@@ -20,9 +20,14 @@ module.exports = Assertion;
  * </code>
  *
  * @constructor
+ * @immutable
  */
 function Assertion( validationType, validationDescriptors ) {
 	validationDescriptors = validationDescriptors || [];
+
+	if( typeof validationType !== 'string' ) {
+		throw new Error( 'validationType is expected to be a string.' );
+	}
 
 	/**
 	 * Returns the type of the validation serving as basis for this assertion.
@@ -60,6 +65,36 @@ function Assertion( validationType, validationDescriptors ) {
 		}
 		return false;
 	};
+
+	/**
+	 * Returns a copy of the assertion where Assertion.unknown is replaced with a particular value.
+	 * If Assertion.unknown is not being used, a self-reference will be returned.
+	 *
+	 * @param {*} unknown
+	 * @return {Assertion}
+	 */
+	this.withUnknown = function( unknown ) {
+		var descriptors = this.getDescriptors();
+		var descriptorsChanged = false;
+
+		for( var i = 0; i < descriptors.length; i++ ) {
+			var descriptor = descriptors[ i ];
+
+			if( descriptor === Assertion.unknown ) {
+				descriptors[ i ] = unknown;
+			}
+
+			if( descriptor instanceof Assertion ) {
+				descriptors[ i ] = descriptor.withUnknown( unknown );
+			}
+
+			descriptorsChanged = descriptorsChanged || descriptor !== descriptors[ i ];
+		}
+		if( !descriptorsChanged ) {
+			return this;
+		}
+		return new Assertion( this.getType(), descriptors );
+	};
 }
 
 /**
@@ -70,3 +105,20 @@ function Assertion( validationType, validationDescriptors ) {
  * @type {Assertion.unknown}
  */
 Assertion.unknown = ( new function AssertionUnknown() {}() );
+
+/**
+ * Returns an array whose first value is Assertion.unknown, further values are values given to the
+ * function as an array. Convenience function for usage with new Assertion().
+ *
+ * @param {Array} values
+ * @returns {Array}
+ */
+Assertion.unknown.and = function( values ) {
+	if( arguments.length !== 1
+		|| typeof values !== 'array'
+	) {
+		throw new Error( 'First argument is expected to be an array of values. ' +
+			'No further arguments expected.' );
+	}
+	return [ Assertion.unknown ].concat( values );
+};

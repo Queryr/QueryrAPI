@@ -12,6 +12,9 @@ module.exports = function designQuery( modelDesigner ) {
 		.field( 'isPublic' )
 			.as.boolean()
 
+		// TODO: NOTE: Assertion might need something like Assertion.unknown.get( 'length' )
+		//  for describing this sort of thing:
+
 		.field( 'description' )
 			.as.string().with.length.between( 1 ).and( 1000 )
 			.or

@@ -48,7 +48,7 @@ var Field = function Field( defaultValue ) {
 	}
 
 	if( this.constructor.TYPE === null ) {
-		throw Error( 'Can not instantiate abstract field instance of no specific type. ' +
+		throw new Error( 'Can not instantiate abstract field instance of no specific type. ' +
 			'The constructor\'s "TYPE" field has to be defined.' );
 	}
 

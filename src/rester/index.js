@@ -1,3 +1,3 @@
 "use strict";
 
-exports.QueryDefinitionFetcher = require('./QueryDefinitionFetcher');
+exports.assert = require('./assert');
