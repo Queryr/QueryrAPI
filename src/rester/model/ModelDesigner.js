@@ -3,6 +3,7 @@
 var ModelDesign = require( './ModelDesign' );
 
 var Type = require( './Type' );
+var Assertion = require( 'typeSpeccer/Assertion' );
 
 /**
  * Allows to describe models. Knows about the different pieces (field types) that can be used to
@@ -24,60 +25,43 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 	function setContext( newContext ) {
 		context = newContext;
-		// TODO
 	}
 
 	function inContext( context ) {
 		// TODO
 	}
 
-	/**
-	 * Defines a function associated with a member if a given context is the current context.
-	 *
-	 * @param {*} grammarContext
-	 * @param {string} word
-	 * @param {Function} fn
-	 */
-	function defineGrammar( grammarContext, word, fn ) {
-		var oldFn =  self[ word ] || null;
-		// TODO: Think about copying attributes on that fn.
-		self[ word ] = function() {
-			var ret;
-			if( inContext( grammarContext ) ) {
-				ret = fn.apply( this, arguments );
-			}
-			else if( oldFn ) {
-				ret = oldFn.apply( this, arguments );
-			}
-			else {
-				throw new Error( 'No meaning associated with "' + word + '" in current context' );
-				// TODO: think about moving up in context, e.g. can call "field" from context below model.
-			}
+	function declare( word, callback ) {
+		// TODO
 
-			ret = ret !== undefined
-				? ret
-				: currentGrammarNode || this;
+		var callbackObject = {
+			/**
+			 * Will add a condition for this function to continue.
+			 */
+			continueIf: function() {},
+			/**
+			 * Will add a condition for this function to stop
+			 */
+			stopIf: function() {},
+			startTopic: function() {},
+			endTopic: function() {},
+			/**
+			 * Returns whether a certain word has been called right before the current one.
+			 *
+			 * @param {string|string[]} word One or more words of whom one is expected to be the
+			 *        direct precursor of the current word.
+			 */
+			comesFrom: function( word ) {}
+		};
 
-			currentGrammarNode = null;
-			return ret;
+		// TODO: Return fn with fields instead, see usage below.
+		return {
+			topic: function() {}
 		};
 	}
 
-	/**
-	 * Can be used to define a conjunction to be used after a defined word, followed by a set of
-	 * other possible words.
-	 *
-	 * @param {string} word
-	 * @param {string[]} followingWords
-	 */
-	function defineGrammarNode( word, followingWords ) {
-		currentGrammarNode = currentGrammarNode || {};
-		var node = currentGrammarNode[ word ] = currentGrammarNode[ word ] || {};
-		for( var i in followingWords ) {
-			var followingWord = followingWords[ i ];
-			node[ followingWords[ i ] ] = self[ followingWord ];
-		}
-		// TODO: also add error throwing functions for words not allowed after the conjunction.
+	function declareNode( word, callback ) {
+		// TODO
 	}
 
 	this.model = function( name ) {
@@ -88,29 +72,65 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	};
 
 	var nextFieldName = null;
-	defineGrammar( 'model', 'field', function( fieldName ) {
+	declare( 'field', function( fieldName ) {
+		this.startTopic();
 		nextFieldName = fieldName;
-		defineGrammarNode( 'as', TYPE_NAMES );
 	} );
 
-	defineGrammar( 'or', function() {
-		defineGrammarNode( 'as', TYPE_NAMES );
-		// TODO: context 2: between assertions
+	declareNode( 'as' ).topic( 'field' )( function() {
+		this.continueIf( this.comesFrom( 'field' ) );
+	} );
+	declareNode( 'as' )( function() {
+		this.continueIf( inContext( Type ) );
+		this.continueIf( this.comesFrom( 'or' ) );
+	} );
+
+	declare( 'or', function() {
+		this.continueIf( inContext( Type ) );
+		// Allows for defining a mixed type for a field or for joining assertions.
+		// TODO: handle assertions "or" in generic way with separate "declare".
 	} );
 
 	for( var i in usableFieldTypes ) {
 		var typeSpec = usableFieldTypes[ i ];
+		var typeName = typeSpec.name();
 
-		defineGrammar( 'field', typeSpec.name(), function() {
-			if( context.getTypeSpec() !== null ) {
-				// TODO: change typeSpec to MixedType
-			} else {
-				var newField = new Type( typeSpec );
-				models[ nextFieldName ] = newField;
-				nextFieldName = null;
-				setContext( newField );
-				defineGrammarNode( 'as', TYPE_NAMES );
-			}
+		declare( typeName ).topic( 'field' )( function() {
+			//this.continueIf( nextFieldName !== null );
+			// NOTE: Don't need this since this fn will only run if topic is still running.
+
+			var newField = new Type( typeSpec );
+			models[ nextFieldName ] = newField;
+			nextFieldName = null;
+			setContext( newField );
+
+			this.endTopic();
+		} );
+
+		declare( typeName, function() {
+			this.continueIf( inContext( Type ) );
+			this.continueIf( context.getTypeSpec() );
+
+			// TODO: change typeSpec to MixedType
+		} );
+
+		typeSpec.validators().each( function( validator, validatorName ) {
+
+			declare( validatorName, function() {
+				this.continueIf( inContext( Type ) );
+				this.continueIf( context.getTypeSpec() === typeSpec );
+
+				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
+				context.addAssertion( assertion );
+
+				// TODO: handle properties, e.g. 'length': .with.length.between(...)
+			} );
+
+		} );
+
+		declare( 'with', function() {
+			this.continueIf( inContext( Type ) );
+			this.continueIf( this.comesFrom( TYPE_NAMES ) );
 		} );
 	}
 };

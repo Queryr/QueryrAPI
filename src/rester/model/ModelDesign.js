@@ -1,18 +1,16 @@
 "use strict";
 
+module.exports = ModelDesign;
 
 /**
  * Describes a model. E.g. what fields a model has and what kind of values those fields accept.
  *
- * @param {string} modelName
- * @param {ModelDesignField[]} fields
+ * @param {Type[]} fields
  *
  * @constructor
  */
-function ModelDesign( modelName, fields ) {
+function ModelDesign( fields ) {
 	fields = fields.slice() || [];
-
-
 }
 
 ModelDesign.prototype.getFields = function() {
@@ -20,13 +18,31 @@ ModelDesign.prototype.getFields = function() {
 };
 // TODO
 
-module.exports = ModelDesign;
 
-function ModelDesignField( fieldName, typeSpec, validators ) {
 
+function Type( typeSpec, assertions, descriptors ) {
 	// TODO
+	this.getTypeSpec = function() {
+		return typeSpec;
+	};
+
+	this.getAssertions = function() {
+		return assertions;
+	};
+
+	this.getDescriptors = function() {
+		return descriptors;
+	};
 
 	this.copy = function() {
-		return new this.constructor( fieldName, typeSpec, validators );
+		return new this.constructor( typeSpec, assertions, descriptors );
 	};
+
+	this.newValue = function( value ) { // TODO
+		typeSpec.use()( value );
+	};
+}
+
+function TypeValue() {
+
 }
