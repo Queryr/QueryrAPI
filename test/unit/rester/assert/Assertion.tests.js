@@ -37,4 +37,10 @@ describe( 'Assertion', function(){
 			expect( assertion.withUnknown() ).to.be( assertion );
 		} );
 	} );
+
+	describe( '#equals()', function() {
+		it( 'should be equal to itself', function() {
+			expect( assertion.equals( assertion ) ).to.be( true );
+		} );
+	} );
 } );

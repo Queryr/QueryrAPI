@@ -95,6 +95,43 @@ function Assertion( validationType, validationDescriptors ) {
 		}
 		return new Assertion( this.getType(), descriptors );
 	};
+
+	/**
+	 * Returns whether this assertion is equal to another one.
+	 *
+	 * @param {Assertion|*} other
+	 * @returns {boolean}
+	 */
+	this.equals = function( other ) {
+		if( this === other ) {
+			return true;
+		}
+		if( other.constructor !== this.constructor ) {
+			return false;
+		}
+
+		var othersDescriptors = other.getDescriptors();
+
+		if( validationType !== other.getType()
+			|| validationDescriptors.length !== othersDescriptors.length
+		) {
+			return false;
+		}
+
+		for( var i = 0; i < validationDescriptors.length; i++ ) {
+			var ownDescriptor = validationDescriptors[ i ];
+			var otherDescriptor = othersDescriptors[ i ];
+
+			if( ownDescriptor instanceof Assertion && otherDescriptor instanceof Assertion ) {
+				if( !ownDescriptor.equals( otherDescriptor ) ) {
+					return false;
+				}
+			} else if( ownDescriptor !== otherDescriptor ) {
+				return false;
+			}
+		}
+		return true;
+	};
 }
 
 /**
