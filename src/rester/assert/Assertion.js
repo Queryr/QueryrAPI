@@ -115,7 +115,7 @@ Assertion.unknown = ( new function AssertionUnknown() {}() );
  */
 Assertion.unknown.and = function( values ) {
 	if( arguments.length !== 1
-		|| typeof values !== 'array'
+		|| !Array.isArray( values )
 	) {
 		throw new Error( 'First argument is expected to be an array of values. ' +
 			'No further arguments expected.' );

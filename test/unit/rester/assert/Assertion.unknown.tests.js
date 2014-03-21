@@ -12,3 +12,21 @@ describe( 'Assertion.unknown', function() {
 		expect( Assertion.unknown ).to.equal( Assertion.unknown );
 	} );
 } );
+
+describe( 'Assertion.unknown.and()', function() {
+	describe( 'with empty array', function() {
+		var values = Assertion.unknown.and( [] );
+
+		it( 'should return an array with unknown as only value', function() {
+			expect( values ).to.eql( [ Assertion.unknown ] );
+		} );
+	} );
+
+	describe( 'with multiple values', function() {
+		var values = Assertion.unknown.and( [ true, 1, 'foo' ] );
+
+		it( 'should return an array with unknown plus given values', function() {
+			expect( values ).to.eql( [ Assertion.unknown, true, 1, 'foo' ] );
+		} );
+	} );
+} );
