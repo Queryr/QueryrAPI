@@ -72,6 +72,7 @@ function describeAssertionEqualsNotEqualToUnrelatedValue( assertion ) {
 	var unrelatedValues = {
 		number: 42,
 		undefined: undefined,
+		'null': null,
 		string: 'foo',
 		regex: /./,
 		'object literal': {},

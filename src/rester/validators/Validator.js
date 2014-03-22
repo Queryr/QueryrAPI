@@ -13,8 +13,11 @@ module.exports = Validator;
  * @constructor
  */
 function Validator( validationFn, validationExpectation ) {
-	if( typeof validatorFn !== 'function' ) {
-		throw 'Validation function callback required';
+	if( typeof validationFn !== 'function' ) {
+		throw new Error( 'Validation function callback required' );
+	}
+	if( typeof validationExpectation !== 'string' ) {
+		throw new Error( 'Validation expectation not stated' );
 	}
 
 	/**
