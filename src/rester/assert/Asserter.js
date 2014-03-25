@@ -32,10 +32,14 @@ function Asserter( validators ) {
 		var descriptors = assertion.getDescriptors();
 		var validatorParams = this.assertionDescriptorsToValidatorParams( descriptors );
 		var validatorName = assertion.getType();
-		var validatorFn = validators.validator( validatorName );
+		var validator = validators.get( validatorName );
 
-		var success = validatorFn.apply( null, validatorParams );
-		if( !success ) {
+		if( validator === null ) {
+			throw new Error( 'Given assertion requires unknown validator "' + validatorName + '"' );
+		}
+
+		var isValid = validator.isValid.apply( validator, validatorParams );
+		if( !isValid ) {
 			// TODO: Create AssertionError with more detail. Generate a message containing full
 			//  assertion details.
 			throw new Error( 'assertion failed' );
@@ -44,7 +48,7 @@ function Asserter( validators ) {
 	};
 
 	/**
-	 * Turns an assertions validation descriptors into parameters to be used with an actual
+	 * Turns an assertion's validation descriptors into parameters to be used with an actual
 	 * validation.
 	 *
 	 * @param descriptors
