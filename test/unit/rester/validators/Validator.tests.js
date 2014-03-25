@@ -1,18 +1,11 @@
 'use strict';
 
 var expect = require( 'expect.js' );
+var describeValidatorInstance = require( './describe/describeValidatorInstance' );
 
 var Validator = require( '../../../../' ).rester.validators.Validator;
 
-describe( 'Validator', function(){
-	var validator;
-
-	beforeEach( function() {
-		validator = new Validator( function( value ) {
-			return value === true;
-		}, 'to be true' );
-	} );
-
+describe( 'Validator', function() {
 	describe( 'constructor', function() {
 		it( 'throws an error if first param is not a function', function() {
 			expect( function() {
@@ -23,7 +16,7 @@ describe( 'Validator', function(){
 			} ).to.throwError();
 		} );
 
-		it( 'throws an error if first param is not a function', function() {
+		it( 'throws an error if second param is not a string', function() {
 			function fnReturnTrue() {
 				return true;
 			}
@@ -36,43 +29,25 @@ describe( 'Validator', function(){
 		} );
 	} );
 
-	describe( '#isValid()', function() {
-		it( 'should be true if valid value is given', function() {
-			expect( validator.isValid( true ) ).to.be( true );
-		} );
-
-		forEachInvalidValue( function( invalidValue, valueType ) {
-			it( 'should be false if invalid ' + valueType + ' value is given', function() {
-				expect( validator.isValid( invalidValue ) ).to.be( false );
-			} );
-		} );
-	} );
-
-	describe( '#validate()', function() {
-		it( 'should throw no error if valid value is given', function() {
-			expect( function() { validator.validate( true ); } ).to.not.throwError();
-		} );
-
-		forEachInvalidValue( function( invalidValue, valueType ) {
-			it( 'should throw an error if invalid ' + valueType + ' value is given', function() {
-				expect( function() { validator.validate( invalidValue ); } ).to.throwError();
-			} );
-		} );
-	} );
-
-	function forEachInvalidValue( callback ) {
-		var invalidValues = {
-			number: 42,
-			undefined: undefined,
-			'null': null,
-			string: 'foo',
-			regex: /./,
-			'object literal': {},
-			'array literal': [],
-			'Date object': new Date()
-		};
-		for( var valueType in invalidValues ) {
-			callback( invalidValues[ valueType ], valueType );
-		}
-	}
+	describeValidatorInstance(
+		new Validator(
+			function( value ) {
+				return value === true;
+			},
+			'to be true'
+		), [
+			[ true ]
+		], [
+			[ false ],
+			[ null ],
+			[ undefined ],
+			[ 42 ],
+			[ 'foo' ],
+			[ /./ ],
+			[ {} ],
+			[ [] ],
+			[ new Date() ],
+			[ function() {} ]
+		]
+	);
 } );

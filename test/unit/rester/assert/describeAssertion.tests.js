@@ -1,6 +1,7 @@
 'use strict';
 
 var expect = require( 'expect.js' );
+
 var Assertion = require( '../../../../' ).rester.assert.Assertion;
 var describeAssertion = require( '../../../../' ).rester.assert.describeAssertion;
 

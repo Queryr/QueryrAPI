@@ -1,6 +1,8 @@
 'use strict';
 
 var expect = require( 'expect.js' );
+var _ = require( 'underscore' );
+
 var Assertion = require( '../../../../' ).rester.assert.Assertion;
 var describeAssertion = require( '../../../../' ).rester.assert.describeAssertion;
 
@@ -28,8 +30,7 @@ describe( 'Assertion#equals()', function() {
 	} );
 
 	var testAssertionsSet = buildTestAssertions();
-	for( var i in testAssertionsSet ) {
-		var testAssertion = testAssertionsSet[ i ];
+	_.each( testAssertionsSet, function( testAssertion, i ) {
 		var otherAssertions = testAssertionsSet.filter( function( elem ) {
 			return elem !== testAssertion;
 		} );
@@ -45,7 +46,7 @@ describe( 'Assertion#equals()', function() {
 
 			describeAssertionEqualsForAssertion( testAssertion, otherAssertions );
 		} );
-	}
+	} );
 } );
 
 function describeAssertionEqualsForAssertion( assertion, otherAssertions ) {
@@ -55,15 +56,14 @@ function describeAssertionEqualsForAssertion( assertion, otherAssertions ) {
 		} );
 	} );
 
-	for( var i = 0; i < otherAssertions.length; i++ ) {
-		var otherAssertion = otherAssertions[ i ];
+	_.each( otherAssertions, function( otherAssertion ) {
 		describe( 'with ' + describeAssertion( otherAssertion ), function() {
 			it( 'should not be equal', function() {
 				expect( assertion.equals( otherAssertion ) ).to.be( false );
 				expect( otherAssertion.equals( assertion ) ).to.be( false);
 			} );
 		} );
-	}
+	} );
 
 	describeAssertionEqualsNotEqualToUnrelatedValue( assertion );
 }

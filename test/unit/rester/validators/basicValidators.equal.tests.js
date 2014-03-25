@@ -1,83 +1,32 @@
 'use strict';
 
 var expect = require( 'expect.js' );
+var _ = require( 'underscore' );
 
-var validators = require( '../../../../' ).rester.validators;
-var Validator = validators.Validator;
-var Validators = validators.Validators;
+var describeBasicValidatorsValidator = require( './describe/describeBasicValidatorsValidator' );
 
 describe( 'basicValidators:equal', function() {
-	var basicValidators = new Validators();
-	validators.basicValidators( basicValidators );
-
-	var equalValidator = basicValidators.validator( 'equal' );
-
 	var simpleValues = [
-		true, false, null, undefined, 'foo', '', ' ', '0', 42, 0, -1, {}, [], Validator
+		true, false, null, undefined, 'foo', '', ' ', '0', 42, 0, -1, {}, [], function() {}
 	];
 	var validArgumentsSet = [];
 	var invalidArgumentsSet = [];
 
-	for( var i = 0; i < simpleValues.length; i++ ) {
-		var simpleValue = simpleValues[ i ];
+	_.each( simpleValues, function( simpleValue, i ) {
 		validArgumentsSet.push( [ simpleValue, simpleValue ] );
 
-		for( var j = 0; j < simpleValues.length; j++ ) {
-			if( i === j ) {
-				continue;
+		_.each( simpleValues, function( anotherSimpleValue, j ) {
+			if( i !== j ) {
+				invalidArgumentsSet.push( [ simpleValue, anotherSimpleValue ] );
 			}
-			var anotherSimpleValue = simpleValues[ j ];
-			invalidArgumentsSet.push( [ simpleValue, anotherSimpleValue ] );
-		}
-	}
+		} );
+	} );
 
-	describeParticularValidatorInstance( equalValidator, validArgumentsSet, invalidArgumentsSet );
+	invalidArgumentsSet = invalidArgumentsSet.concat( [
+		[ {}, {} ],
+		[ [], [] ],
+		[ NaN, NaN ]
+	] );
+
+	describeBasicValidatorsValidator( 'equal', validArgumentsSet, invalidArgumentsSet );
 } );
-
-function describeParticularValidatorInstance( validator, validArgsSet, invalidArgsSet ) {
-	it( 'is a Validator', function() {
-		expect( validator ).to.be.a( Validator );
-	} );
-
-	describe( '#isValid()', function() {
-		var i;
-		for( i = 0; i < validArgsSet.length; i++ ) {
-			var validArgs = validArgsSet[ i ];
-
-			it( 'returns true if arguments for positive validation supplied', function() {
-				var isValid = validator.isValid.apply( validator, validArgs );
-				expect( isValid ).to.be( true );
-			} );
-		}
-		for( i = 0; i < invalidArgsSet.length; i++ ) {
-			var invalidArgs = invalidArgsSet[ i ];
-
-			it( 'returns false if arguments for failing validation supplied', function() {
-				var isValid = validator.isValid.apply( validator, invalidArgs );
-				expect( isValid ).to.be( false );
-			} );
-		}
-	} );
-
-	describe( '#validate()', function() {
-		var i;
-		for( i = 0; i < validArgsSet.length; i++ ) {
-			var validArgs = validArgsSet[ i ];
-
-			it( 'throws no error if arguments for positive validation supplied', function() {
-				expect( function() {
-					validator.validate.apply( validator, validArgs );
-				} ).to.not.throwError();
-			} );
-		}
-		for( i = 0; i < invalidArgsSet.length; i++ ) {
-			var invalidArgs = invalidArgsSet[ i ];
-
-			it( 'throws an error if arguments for failing validation supplied', function() {
-				expect( function() {
-					validator.validate.apply( validator, invalidArgs );
-				} ).to.throwError();
-			} );
-		}
-	} );
-}
