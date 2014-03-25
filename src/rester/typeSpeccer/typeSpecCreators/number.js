@@ -36,7 +36,7 @@ module.exports = function( typeSpecBuilder ) {
 				var minMax = sortMinMax( min, max );
 				return value >= minMax.min && value <= minMax.max;
 			},
-			function( min, max ) {
+			function( value, min, max ) {
 				var minMax = sortMinMax( min, max );
 				return 'to be between ' + minMax.min + ' and ' + minMax.max;
 			}

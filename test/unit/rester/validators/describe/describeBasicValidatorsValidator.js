@@ -7,10 +7,10 @@ var describeValidatorInstance = require( './describeValidatorInstance' );
 
 var validators = require( '../../../../../' ).rester.validators;
 var Validators = validators.Validators;
-var setBasicValidators = validators.basicValidators;
+var applyBasicValidators = validators.basicValidators;
 
 function describeBasicValidatorsValidator( validatorName, validArgumentsSet, invalidArgumentsSet ) {
-	var basicValidators = setBasicValidators( new Validators() );
+	var basicValidators = applyBasicValidators( new Validators() );
 	var basicValidatorToBeDescribed = basicValidators.validator( validatorName );
 
 	describeValidatorInstance(

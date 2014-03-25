@@ -16,7 +16,7 @@ describe( 'Validator', function() {
 			} ).to.throwError();
 		} );
 
-		it( 'throws an error if second param is not a string', function() {
+		it( 'throws an error if second param is not a string or function', function() {
 			function fnReturnTrue() {
 				return true;
 			}
@@ -29,25 +29,38 @@ describe( 'Validator', function() {
 		} );
 	} );
 
-	describeValidatorInstance(
-		new Validator(
-			function( value ) {
-				return value === true;
-			},
-			'to be true'
-		), [
-			[ true ]
-		], [
-			[ false ],
-			[ null ],
-			[ undefined ],
-			[ 42 ],
-			[ 'foo' ],
-			[ /./ ],
-			[ {} ],
-			[ [] ],
-			[ new Date() ],
-			[ function() {} ]
-		]
-	);
+	describeOkValidatorInstance( new Validator(
+		function( value ) {
+			return value === true;
+		},
+		'to be true'
+	) );
+
+	describeOkValidatorInstance( new Validator(
+		function( value ) {
+			return value === true;
+		},
+		function() {
+			return 'to be true';
+		}
+	) );
+
+	function describeOkValidatorInstance( instance ) {
+		describeValidatorInstance(
+			instance, [
+				[ true ]
+			], [
+				[ false ],
+				[ null ],
+				[ undefined ],
+				[ 42 ],
+				[ 'foo' ],
+				[ /./ ],
+				[ {} ],
+				[ [] ],
+				[ new Date() ],
+				[ function() {} ]
+			]
+		);
+	}
 } );
