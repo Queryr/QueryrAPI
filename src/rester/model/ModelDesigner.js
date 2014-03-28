@@ -100,7 +100,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			// NOTE: Don't need this since this fn will only run if topic is still running.
 
 			var newField = new Type( typeSpec );
-			models[ nextFieldName ] = newField;
+			context.setField( nextFieldName, newField );
 			nextFieldName = null;
 			setContext( newField );
 

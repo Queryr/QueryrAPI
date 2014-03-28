@@ -5,6 +5,8 @@ var TypeSpec = require( './TypeSpec' );
 // TODO: Perhaps not a real "builder". Maybe the logic from TypeSpec should move in here and
 //       TypeSpec itself should be immutable.
 //       OR, just make TypeSpec members return copies instead of self-references.
+//       OR, Have a TypeSpecs like Validators, TypeSpec should not know its own name and .property()
+//           should take a string
 
 /**
  * Allows to describe field types.

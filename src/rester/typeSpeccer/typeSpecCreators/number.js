@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function( typeSpecBuilder ) {
-	return typeSpecBuilder.typeSpec( 'number ')
+	return typeSpecBuilder.typeSpec( 'number' )
 		.use( function( value ) {
 			return typeof value === 'number';
 			// TODO: Think about how we want to handle NaN and Infinite. Either have validations

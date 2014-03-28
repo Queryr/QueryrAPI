@@ -39,7 +39,7 @@ function Assertion( validationType, validationDescriptors ) {
 	};
 
 	/**
-	 * Returns the Assertions validation descriptors.
+	 * Returns the Assertion's validation descriptors.
 	 *
 	 * @returns {Array}
 	 */
@@ -142,6 +142,13 @@ function Assertion( validationType, validationDescriptors ) {
  * @type {Assertion.unknown}
  */
 Assertion.unknown = ( new function AssertionUnknown() {}() );
+
+/**
+ * An array containing Assertion.unknown.
+ *
+ * @type {Array}
+ */
+Assertion.unknown.only = [ Assertion.unknown ];
 
 /**
  * Returns an array whose first value is Assertion.unknown, further values are values given to the

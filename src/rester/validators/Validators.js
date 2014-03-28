@@ -53,9 +53,19 @@ function Validators() {
 	};
 
 	/**
+	 * Returns whether the given validator is part of this map.
+	 *
+	 * @param {string} name
+	 * @returns {boolean}
+	 */
+	this.has = function( name ) {
+		return this.get( name ) !== null;
+	};
+
+	/**
 	 * Getter/setter for validators. Allows to define a new Validator directly into the collection.
 	 *
-	 * @param {string} [validatorName] Name of the new validator or name of the value to return.
+	 * @param {string} [name] Name of the new validator or name of the value to return.
 	 *        Can be omitted if second parameter is a named function.
 	 * @param {function} [validatorFn] A named function. The function's name will be used as
 	 *        the validator name if first parameter is omitted.

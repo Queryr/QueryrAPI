@@ -13,6 +13,12 @@ describe( 'Assertion.unknown', function() {
 	} );
 } );
 
+describe( 'Assertion.unknown.only', function() {
+	it( 'should be an array containing Assertion.unknown', function() {
+		expect( Assertion.unknown.only ).to.eql( [ Assertion.unknown ] );
+	} );
+} );
+
 describe( 'Assertion.unknown.and()', function() {
 	describe( 'with empty array', function() {
 		var values = Assertion.unknown.and( [] );

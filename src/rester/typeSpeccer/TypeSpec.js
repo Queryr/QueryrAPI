@@ -1,6 +1,6 @@
 'use strict';
 
-var Validators = require( './validators/Validators' );
+var Validators = require( '../validators/Validators' );
 
 /**
  * Constructor for value type. The value type defines what validators can be used on a value of the
@@ -69,11 +69,11 @@ module.exports = function TypeSpec( name ) {
 	/**
 	 * Adds a validator associated with a name which can be used on values of this type.
 	 *
-	 * @param {string|string[]} name
-	 * @param {function} validatorFn
+	 * @see Validators.validator
+	 *
 	 * @returns {TypeSpec} self-reference
 	 */
-	this.validator = function( names, validatorFn ) {
+	this.validator = function() {
 		validators.validator.apply( validators, arguments );
 		return self;
 	};
@@ -81,24 +81,35 @@ module.exports = function TypeSpec( name ) {
 	/**
 	 * Returns or sets the validators available for this type.
 	 *
-	 * @param {Validators} validators
+	 * @param {Validators} newValidators
 	 * @returns {Validators|TypeSpec} the type's validators or a self-reference if used as setter.
 	 */
 	this.validators = function( newValidators ) {
 		if( !newValidators ) {
 			return validators;
 		}
+		if( !( newValidators instanceof Validators ) ) {
+			throw new Error( 'Validators instance expected' );
+		}
 		validators = newValidators;
+		return self;
 	};
 
 	/**
-	 * For describing a property of values of this type.
+	 * Returns or sets the TypeSpec of a given property of this type.
 	 *
 	 * @param {string} name
-	 * @param {TypeSpec} ofType
+	 * @param {TypeSpec|null} [ofType]
+	 * @returns {TypeSpec|null} self-reference or if used as getter, the typeSpec matching the
+	 *          given name or null if none is set.
 	 */
 	this.property = function( name, ofType ) {
-		// TODO: Type checks.
+		if( ofType  === undefined ) {
+			return properties[ name ] || null;
+		}
+		if( ofType !== null && !( ofType instanceof TypeSpec ) ) {
+			throw new Error( 'Expect a TypeSpec instance or null as second parameter' );
+		}
 		properties[ name ] = ofType;
 		return self;
 	};
