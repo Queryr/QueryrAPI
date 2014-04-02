@@ -23,6 +23,7 @@ function ModelField( type, descriptors, assertion ) {
 	if( typeof descriptors !== 'object' || descriptors === null ) {
 		throw new Error( 'The field\'s descriptors has to be an object or can be omitted' );
 	}
+	descriptors = copyObject( descriptors );
 
 	assertion = assertion || null;
 	if( assertion instanceof Assertion ) {
@@ -57,7 +58,7 @@ function ModelField( type, descriptors, assertion ) {
 	 */
 	this.descriptors = function( newDescriptors ) {
 		if( newDescriptors === undefined ) {
-			return descriptors; // TODO: return copy!
+			return copyObject( descriptors );
 		}
 		return this.copy( { descriptors: newDescriptors } );
 	};
@@ -102,6 +103,10 @@ function ModelField( type, descriptors, assertion ) {
 	};
 }
 
-function TypeValue() {
-
+function copyObject( obj ) {
+	var copy = {};
+	for( var key in obj ) {
+		copy[ key ] = obj[ key ];
+	}
+	return copy;
 }

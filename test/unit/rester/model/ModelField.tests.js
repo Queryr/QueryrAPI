@@ -82,7 +82,15 @@ function describeModelFieldWithConstructorParams( constructorParams ) {
 
 	describe( 'constructor', function() {
 		it( 'creates instance without error', function() {
-			expect( newInstance( constructorParams ) ).to.be.a( ModelField );
+			expect( field ).to.be.a( ModelField );
+		} );
+		it( 'creates a copy of the descriptors object instead of keeping a reference', function() {
+			var constructorDescriptors = constructorParams[ 1 ];
+
+			if( typeof constructorDescriptors === 'object' && constructorDescriptors !== null ) {
+				expect( field.descriptors() ).not.to.be( constructorDescriptors );
+				expect( field.descriptors() ).to.eql( constructorDescriptors );
+			}
 		} );
 	} );
 
@@ -90,7 +98,7 @@ function describeModelFieldWithConstructorParams( constructorParams ) {
 		it(
 			'returns the type given to the constructor)',
 			function() {
-				expect( newInstance( constructorParams ).type() ).to.be( constructorParams[0] );
+				expect( field.type() ).to.be( constructorParams[0] );
 			}
 		);
 	} );
@@ -100,11 +108,13 @@ function describeModelFieldWithConstructorParams( constructorParams ) {
 			'returns the descriptors given to the constructor or empty object if omitted in constructor',
 			function() {
 				expect(
-					newInstance( constructorParams ).descriptors()
+					field.descriptors()
 				).to.eql( constructorParams[1] || {} );
 			}
 		);
-		// TODO: test no reference but copy
+		it( 'returns a copy of the internal descriptors object', function() {
+			expect( field.descriptors() ).not.to.be( field.descriptors() );
+		} );
 	} );
 
 	describe( '#descriptors( newDescriptors )', function() {

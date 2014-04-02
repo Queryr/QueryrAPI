@@ -50,15 +50,4 @@ describe( 'Validators', function() {
 			expect( validators.get( 'foo' ) ).to.be( validator );
 		} );
 	} );
-
-	describe( '#has( name )', function() {
-		it( 'return false if validator is not part of the map', function() {
-			expect( validators.has( 'foo' ) ).to.be( false );
-		} );
-
-		it( 'returns true if validaotr is part of the map', function() {
-			validators.set( 'foo', validator );
-			expect( validators.has( 'foo' ) ).to.be( true );
-		} );
-	} );
 } );
