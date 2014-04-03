@@ -2,47 +2,48 @@
 
 module.exports = ModelDesign;
 
+var ModelFieldMap = require( './ModelFieldMap' );
+
 /**
- * Describes a model. E.g. what fields a model has and what kind of values those fields accept.
+ * Describes a model. Basically what fields a model has and what kind of values those fields accept.
  *
- * @param {Type[]} fields
+ * @param {ModelFieldMap} [fields]
  *
  * @constructor
+ * @immutable
  */
 function ModelDesign( fields ) {
-	fields = fields.slice() || [];
-}
+	fields = fields === undefined ? new ModelFieldMap() : fields;
+	if( !( fields instanceof ModelFieldMap ) ) {
+		throw new Error( 'First parameter expected to be a ModelFieldMap' );
+	}
+	fields = fields.copy();
 
-ModelDesign.prototype.getFields = function() {
-	return;
-};
-// TODO
-
-
-
-function Type( typeSpec, assertions, descriptors ) {
-	// TODO
-	this.getTypeSpec = function() {
-		return typeSpec;
+	/**
+	 * Getter/setter for a map of ModelField instances describing what fields this model holds.
+	 *
+	 * @param {ModelFieldMap} [fields]
+	 * @returns {ModelFieldMap|ModelDesign} Setter: no effect on original, returns a copy.
+	 */
+	this.fields = function( newFields ) {
+		if( newFields === undefined ) {
+			return fields.copy();
+		}
+		return new this.constructor( newFields );
 	};
 
-	this.getAssertions = function() {
-		return assertions;
+	/**
+	 * Adds or returns a field.
+	 *
+	 * @param {string} fieldName
+	 * @param {ModelField} [field]
+	 * @returns {ModelField|ModelDesign} Setter: no effect on original, returns a copy.
+	 */
+	this.field = function( fieldName, field ) {
+		if( field === undefined ) {
+			return fields.get( fieldName );
+		}
+		var modifiedFields = this.fields().set( fieldName, field );
+		return new this.constructor( modifiedFields );
 	};
-
-	this.getDescriptors = function() {
-		return descriptors;
-	};
-
-	this.copy = function() {
-		return new this.constructor( typeSpec, assertions, descriptors );
-	};
-
-	this.newValue = function( value ) { // TODO
-		typeSpec.use()( value );
-	};
-}
-
-function TypeValue() {
-
 }

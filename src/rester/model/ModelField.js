@@ -100,7 +100,7 @@ function ModelField( type, descriptors, assertion ) {
 
 	// TODO: create a service for this?
 	this.newValue = function( value, descriptorValues, asserter ) {
-		typeSpec.use()( value ); // TODO: pass descriptors
+		//typeSpec.use()( value ); // TODO: pass descriptors
 		// TODO: run assertions
 	};
 }

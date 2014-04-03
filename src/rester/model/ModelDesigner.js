@@ -2,7 +2,7 @@
 
 var ModelDesign = require( './ModelDesign' );
 
-var Type = require( './Type' );
+var ModelField = require( './ModelField' );
 var Assertion = require( 'typeSpeccer/Assertion' );
 
 /**
@@ -81,12 +81,12 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		this.continueIf( this.comesFrom( 'field' ) );
 	} );
 	declareNode( 'as' )( function() {
-		this.continueIf( inContext( Type ) );
+		this.continueIf( inContext( ModelField ) );
 		this.continueIf( this.comesFrom( 'or' ) );
 	} );
 
 	declare( 'or', function() {
-		this.continueIf( inContext( Type ) );
+		this.continueIf( inContext( ModelField ) );
 		// Allows for defining a mixed type for a field or for joining assertions.
 		// TODO: handle assertions "or" in generic way with separate "declare".
 	} );
@@ -99,7 +99,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			//this.continueIf( nextFieldName !== null );
 			// NOTE: Don't need this since this fn will only run if topic is still running.
 
-			var newField = new Type( typeSpec );
+			var newField = new ModelField( typeSpec );
 			context.setField( nextFieldName, newField );
 			nextFieldName = null;
 			setContext( newField );
@@ -108,7 +108,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		} );
 
 		declare( typeName, function() {
-			this.continueIf( inContext( Type ) );
+			this.continueIf( inContext( ModelField ) );
 			this.continueIf( context.getTypeSpec() );
 
 			// TODO: change typeSpec to MixedType
@@ -117,7 +117,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		typeSpec.validators().each( function( validator, validatorName ) {
 
 			declare( validatorName, function() {
-				this.continueIf( inContext( Type ) );
+				this.continueIf( inContext( ModelField ) );
 				this.continueIf( context.getTypeSpec() === typeSpec );
 
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
@@ -129,7 +129,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		} );
 
 		declare( 'with', function() {
-			this.continueIf( inContext( Type ) );
+			this.continueIf( inContext( ModelField ) );
 			this.continueIf( this.comesFrom( TYPE_NAMES ) );
 		} );
 	}
