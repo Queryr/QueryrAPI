@@ -12,7 +12,9 @@ var TypeSpec = require( '../typeSpeccer/TypeSpec' );
  * @param {TypeSpec} type
  * @param {Object|undefined} [descriptors]
  * @param {Assertion|null} [assertion]
+ *
  * @constructor
+ * @immutable
  */
 function ModelField( type, descriptors, assertion ) {
 	if( !( type instanceof TypeSpec ) ) {
