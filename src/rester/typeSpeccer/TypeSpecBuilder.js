@@ -24,10 +24,11 @@ module.exports = function TypeSpecBuilder( commonValidators ) {
 	/**
 	 * Creates a new TypeSpec instance with all common validators known to the this builder.
 	 *
+	 * @param {string} name
 	 * @returns TypeSpec
 	 */
-	this.typeSpec = function() {
-		return ( new TypeSpec() )
+	this.typeSpec = function( name ) {
+		return ( new TypeSpec( name ) )
 			.validators( commonValidators );
 	};
 };

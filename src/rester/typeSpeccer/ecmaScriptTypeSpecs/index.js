@@ -18,7 +18,7 @@ var basicTypeSpecCreators = require( '../typeSpecCreators' );
 
 for( var type in ECMA_SCRIPT_TYPES ) {
 	var creator = basicTypeSpecCreators[ type ];
-	var typeSpec = creator( ecmaScriptTypeSpecBuilder );
+	var typeSpec = creator( ecmaScriptTypeSpecBuilder.typeSpec( type ) );
 
 	module.exports[ type ] = typeSpec;
 }

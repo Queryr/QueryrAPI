@@ -8,9 +8,12 @@ var _ = require( 'underscore' );
 var Validator = require( '../../../../../' ).rester.validators.Validator;
 
 function describeParticularValidatorInstance( validator, validArgsSet, invalidArgsSet ) {
-	it( 'is a Validator', function() {
+	it( 'is a Validator instance', function() {
 		expect( validator ).to.be.a( Validator );
 	} );
+
+	validArgsSet = _.map( validArgsSet, normalizeArgsArray );
+	invalidArgsSet = _.map( invalidArgsSet, normalizeArgsArray );
 
 	describe( '#isValid()', function() {
 		_.each( validArgsSet, function( args ) {
@@ -43,6 +46,9 @@ function describeParticularValidatorInstance( validator, validArgsSet, invalidAr
 					} ).to.not.throwError();
 				}
 			);
+			it( 'returns a self-reference', function() {
+				expect( validator.validate.apply( validator, args ) ).to.be( validator );
+			} );
 		} );
 		_.each( invalidArgsSet, function( args ) {
 			it(
@@ -55,4 +61,8 @@ function describeParticularValidatorInstance( validator, validArgsSet, invalidAr
 			);
 		} );
 	} );
+}
+
+function normalizeArgsArray( args ) {
+	return  _.isArray( args ) ? args : [ args ];
 }
