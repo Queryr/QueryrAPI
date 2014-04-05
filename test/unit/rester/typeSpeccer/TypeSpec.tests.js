@@ -1,6 +1,7 @@
 'use strict';
 
 var expect = require( 'expect.js' );
+var sinon = require( 'sinon' );
 var _ = require( 'underscore' );
 
 var TypeSpec = require( '../../../../' ).rester.typeSpeccer.TypeSpec;
@@ -49,14 +50,94 @@ describe( 'TypeSpec', function() {
 			expect( typeSpec.use( function() {} ) ).to.be( typeSpec );
 		} );
 
-		it( 'throws an error if fn is not a function', function() {
-			var nonFnValues = [ 0, null, false, true, undefined, {}, /./, 'foo' ];
+		it( 'throws an error if fn is not a function, an object or undefined', function() {
+			_.each(
+				[ 0, null, false, true, 'foo' ],
+				function( value ) {
+					expect( function() {
+						typeSpec.use( value );
+					} ).to.throwError();
+				}
+			);
+		} );
+	} );
 
-			_.each( nonFnValues, function( value ) {
+	describe( '#use()', function() {
+		it( 'returns a function', function() {
+			expect( typeSpec.use() ).to.be.a( Function );
+		} );
+
+		it( 'throws an error if descriptors are registered for the type spec', function() {
+			typeSpec.descriptor( 'foo' );
+			expect( function() { typeSpec.use(); } ).to.throwError();
+		} );
+	} );
+
+	describe( '#use( descriptors )', function() {
+		it( 'returns a function', function() {
+			typeSpec.descriptor( 'foo' );
+			expect( typeSpec.use( { foo: 'bar' } ) ).to.be.a( Function );
+		} );
+	} );
+
+	describe( '#use()( value )', function() {
+		it( 'returns the given value if it is valid', function() {
+			expect( typeSpec.use()( 42 ) ).to.be( 42 );
+		} );
+
+		it( 'invokes a function x previously set via #use( x )', function() {
+			var spy = sinon.stub().returns( true );
+			typeSpec.use( spy );
+			typeSpec.use()( 42 );
+
+			expect( spy.calledOnce ).to.be( true );
+			expect( spy.calledWith( 42 ) ).to.be( true );
+		} );
+	} );
+
+	describe( '#use( descriptors )( value )', function() {
+		var spyNumberIsValid;
+		var spy42IsValid;
+
+		beforeEach( function() {
+			spyNumberIsValid = sinon.stub();
+			spyNumberIsValid.returns( false );
+			spyNumberIsValid.withArgs( sinon.match.number ).returns( true );
+
+			spy42IsValid = sinon.stub();
+			spy42IsValid.returns( false );
+			spy42IsValid.withArgs( 42 ).returns( true );
+
+			typeSpec.descriptor( 'foo' );
+			typeSpec.use( spyNumberIsValid );
+			typeSpec.use( spy42IsValid );
+		} );
+		
+		it(
+			'throws an error if given value is invalid, responsible function set via #use() got ' +
+				'invoked, further function not called',
+			function() {
 				expect( function() {
-					typeSpec.use( value );
+					typeSpec.use( { foo: 'bar' } )( 'invalid-value' );
 				} ).to.throwError();
-			} );
+				expect( spyNumberIsValid.calledOnce ).to.be( true );
+				expect( spy42IsValid.called ).to.be( false );
+			}
+		);
+
+		it( 'returns the given value if it is valid', function() {
+			expect( typeSpec.use( { foo: 'bar' } )( 42 ) ).to.be( 42 );
+		} );
+
+		it( 'invokes functions previously set via #use()', function() {
+			var descriptors = { foo: 'bar' };
+			typeSpec.use( descriptors )( 42 );
+
+			expect( spyNumberIsValid.calledOnce ).to.be( true );
+			expect( spyNumberIsValid.calledWith( 42, sinon.match( descriptors ) ) ).to.be( true );
+
+			expect( spy42IsValid.calledOnce ).to.be( true );
+			expect( spy42IsValid.calledWith( 42, sinon.match( descriptors ) ) ).to.be( true );
 		} );
 	} );
 

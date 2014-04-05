@@ -36,10 +36,12 @@ function Validator( validationFn, validationExpectation ) {
 	 * given value is not valid.
 	 *
 	 * @throws Error if invalid value given.
+	 *
+	 * @return {Validator} self-reference
 	 */
 	this.validate = function() {
 		if( this.isValid.apply( this, arguments ) ) {
-			return;
+			return this;
 		}
 		var optionParams = Array.prototype.slice.call( arguments, 1 );
 		var errorMsg = getValidationErrorMsg.apply( null, optionParams );

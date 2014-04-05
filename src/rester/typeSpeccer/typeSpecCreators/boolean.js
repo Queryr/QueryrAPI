@@ -1,7 +1,7 @@
 'use strict';
 
-module.exports = function( typeSpecBuilder ) {
-	return typeSpecBuilder.typeSpec( 'boolean' )
+module.exports = function( typeSpec ) {
+	return typeSpec
 		.use( function( value ) {
 			return typeof value === 'boolean';
 		} )

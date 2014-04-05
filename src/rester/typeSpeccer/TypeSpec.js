@@ -34,17 +34,49 @@ module.exports = function TypeSpec( name ) {
 	/**
 	 * Allows to define some sort of constructor for values of this type. The callback function
 	 * has access to descriptors required for instances of this type.
+	 * If called without parameter, a function for validating a value against the TypeSpec will
+	 * be returned. The function takes a value and throws an error if the given value is invalid.
 	 *
-	 * @param {Function} fn
-	 * @returns {TypeSpec} self-reference
+	 * @example <code>
+	 *     instance.use( function( value ) {
+	 *         return value instanceof SomeConstructor;
+	 *     } );
+	 * </code>
+	 * @example <code>instance.use( descriptors )( someValue )</code>
+	 *
+	 * @param {Function} [fnOrDescriptorValues]
+	 * @returns {TypeSpec|Function} self-reference
 	 */
-	this.use = function( fn ) {
-		if( typeof fn !== 'function' ) {
-			throw 'No callback function given';
+	this.use = function( fnOrDescriptorValues ) {
+		if( typeof fnOrDescriptorValues === 'function' ) {
+			using.push( fnOrDescriptorValues );
+			return self;
 		}
-		using.push( fn );
-		return self;
+
+		if( fnOrDescriptorValues instanceof Object || fnOrDescriptorValues === undefined ) {
+			return newValueConstructor( fnOrDescriptorValues || {} );
+		}
+
+		throw 'no callback function given';
 	};
+
+	function newValueConstructor( descriptorValues ) {
+		for( var i = 0; i < descriptors.length; i++ ) {
+			var descriptor = descriptors[ i ];
+			if( descriptorValues[ descriptor ] === undefined ) {
+				throw new Error( 'No value given for descriptor "' + descriptor + '"' );
+			}
+		}
+		return function( value ) {
+			for( var i = 0; i < using.length; i++ ) {
+				var ret = using[ i ]( value, descriptorValues );
+				if( ret === false ) {
+					throw new Error( '"' + value + '" is not a valid ' + name );
+				}
+			}
+			return value;
+		};
+	}
 
 	/**
 	 * Adds the name of a detail descriptor required for defining an instance of this type.
@@ -67,15 +99,16 @@ module.exports = function TypeSpec( name ) {
 	};
 
 	/**
-	 * Adds a validator associated with a name which can be used on values of this type.
+	 * Adds a validator associated with a name which can be used on values of this type. Returns
+	 * a Validator instance or null if used with first parameter only.
 	 *
 	 * @see Validators.validator
 	 *
-	 * @returns {TypeSpec} self-reference
+	 * @returns {TypeSpec|Validator|null} self-reference or requested Validator instance or null
 	 */
 	this.validator = function() {
-		validators.validator.apply( validators, arguments );
-		return self;
+		var ret = validators.validator.apply( validators, arguments );
+		return ret instanceof Validators ? self : ret;
 	};
 
 	/**

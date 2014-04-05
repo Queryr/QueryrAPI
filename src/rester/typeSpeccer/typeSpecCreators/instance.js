@@ -1,10 +1,10 @@
 'use strict';
 
-module.exports = function( typeSpecBuilder ) {
-	return typeSpecBuilder.typeSpec( 'instance' )
+module.exports = function( typeSpec ) {
+	return typeSpec
 		.descriptor( 'of' )
-		.use( function() {
-			return this.value instanceof this.options.of;
+		.use( function( value, descriptors ) {
+			return value instanceof descriptors.of;
 			// TODO: Something like that^^, not really "options" since "of" is required
 		} );
 };

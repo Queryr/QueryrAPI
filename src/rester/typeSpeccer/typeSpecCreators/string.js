@@ -2,8 +2,8 @@
 
 var ecmaScriptTypes = require( '../ecmaScriptTypeSpecs' );
 
-module.exports = function( typeSpecBuilder ) {
-	return typeSpecBuilder.typeSpec( 'string' )
+module.exports = function( typeSpec ) {
+	return typeSpec
 		.use( function( value ) {
 			return typeof value === 'string';
 		} )
