@@ -97,7 +97,7 @@ function Assertion( validationType, validationDescriptors ) {
 	};
 
 	/**
-	 * Returns whether this assertion is equal to another one.
+	 * Returns whether the instance is equal to another one.
 	 *
 	 * @param {Assertion|*} other
 	 * @returns {boolean}
@@ -106,7 +106,10 @@ function Assertion( validationType, validationDescriptors ) {
 		if( this === other ) {
 			return true;
 		}
-		if( other.constructor !== this.constructor ) {
+		if(
+			!( other instanceof Object )
+			|| other.constructor !== this.constructor
+		) {
 			return false;
 		}
 
@@ -122,7 +125,7 @@ function Assertion( validationType, validationDescriptors ) {
 			var ownDescriptor = validationDescriptors[ i ];
 			var otherDescriptor = othersDescriptors[ i ];
 
-			if( ownDescriptor instanceof Assertion && otherDescriptor instanceof Assertion ) {
+			if( ownDescriptor instanceof Assertion ) {
 				if( !ownDescriptor.equals( otherDescriptor ) ) {
 					return false;
 				}
