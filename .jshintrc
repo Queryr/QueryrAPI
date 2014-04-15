@@ -17,6 +17,7 @@
 	"maxcomplexity": 20,
 	"maxlen": 120,
 	"laxbreak": true,
+	"laxcomma": true,
 	"latedef": false,
 	"supernew": true,
 	"loopfunc": true,

@@ -64,6 +64,32 @@ function ModelFieldMap() {
 	};
 
 	/**
+	 * Returns whether the instance is equal to another one.
+	 *
+	 * @param {ModelFieldMap|*} other
+	 * @returns {boolean}
+	 */
+	this.equals = function( other ) {
+		if( this === other ) {
+			return true;
+		}
+		if(
+			!( other instanceof Object )
+			|| other.constructor !== this.constructor
+			|| other.length !== this.length
+		) {
+			return false;
+		}
+		for( var name in modelFields ) {
+			var otherField = other.get( name );
+			if( !otherField || !otherField.equals( modelFields[ name ] ) ) {
+				return false;
+			}
+		}
+		return true;
+	};
+
+	/**
 	 * Returns a copy of the map.
 	 *
 	 * @returns {ModelFieldMap}
@@ -81,6 +107,8 @@ function ModelFieldMap() {
 	 *
 	 * @param {function} callback Receives ModelField instance and associated name as arguments.
 	 * @param {*} [context] Context for callback, null if omitted.
+	 *
+	 * TODO: define return value and allow break within callback by returning false
 	 */
 	this.each = function( callback, context ) {
 		for( var name in modelFields ) {
