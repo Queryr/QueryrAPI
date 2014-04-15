@@ -15,6 +15,8 @@ var TypeSpec = require( '../typeSpeccer/TypeSpec' );
  *
  * @constructor
  * @immutable
+ *
+ * @throws {Error} If given Assertion instance has no Assertion.unknown as descriptor.
  */
 function ModelField( type, descriptors, assertion ) {
 	if( !( type instanceof TypeSpec ) ) {
@@ -72,7 +74,7 @@ function ModelField( type, descriptors, assertion ) {
 	 * NOTE: This is not an array of assertions since an assertion can be an "and" assertion
 	 *       consisting out of other assertions.
 	 *
-	 * @param {Assertion|null} newAssertion
+	 * @param {Assertion|null} [newAssertion]
 	 * @returns {Assertion|ModelField} Setter: no effect on original, returns a copy.
 	 */
 	this.assertion = function( newAssertion ) {
@@ -98,11 +100,51 @@ function ModelField( type, descriptors, assertion ) {
 		);
 	};
 
-	// TODO: create a service for this?
-	this.newValue = function( value, descriptorValues, asserter ) {
-		//typeSpec.use()( value ); // TODO: pass descriptors
-		// TODO: run assertions
+	/**
+	 * Returns whether the instance is equal to another one.
+	 *
+	 * @param {ModelField|*} other
+	 * @returns {boolean}
+	 */
+	this.equals = function( other ) {
+		if( this === other ) {
+			return true;
+		}
+		if(
+			!( other instanceof Object )
+			|| other.constructor !== this.constructor
+			|| type !== other.type()
+		) {
+			return false;
+		}
+		if(
+			assertion && !assertion.equals( other.assertion() )
+			|| !assertion && other.assertion()
+		) {
+			return false;
+		}
+		return equalDescriptors( descriptors, other.descriptors() );
 	};
+
+	function equalDescriptors( descriptors1, descriptors2 ) {
+		var descriptorName;
+		var ownDescriptorsLength = 0;
+		var otherDescriptorsLength = 0;
+
+		for( descriptorName in descriptors1 ) {
+			ownDescriptorsLength++;
+			var ownDescriptor = descriptors1[ descriptorName ];
+			var otherDescriptor = descriptors2[ descriptorName ];
+
+			if( ownDescriptor !== otherDescriptor ) {
+				return false;
+			}
+		}
+		for( descriptorName in descriptors2 ) {
+			otherDescriptorsLength++;
+		}
+		return ownDescriptorsLength === otherDescriptorsLength;
+	}
 }
 
 function copyObject( obj ) {
