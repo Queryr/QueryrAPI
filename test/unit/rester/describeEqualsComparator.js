@@ -58,6 +58,10 @@ function describeEqualsComparator( options ) {
 	var setOfInstDescrSets = createSetOfEqualInstancesSets();
 	var setOfInstDescrSets2 = createSetOfEqualInstancesSets();
 
+	if( setOfInstDescrSets.length < 2 ) {
+		throw new Error( 'instanceProvider should at least return two instances' );
+	}
+
 	expect( setOfInstDescrSets.length ).to.be( _.values( options.instanceProvider() ).length );
 	expect(
 		_.flatten( setOfInstDescrSets ).length

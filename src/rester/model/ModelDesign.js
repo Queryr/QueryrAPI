@@ -46,4 +46,23 @@ function ModelDesign( fields ) {
 		var modifiedFields = this.fields().set( fieldName, field );
 		return new this.constructor( modifiedFields );
 	};
+
+	/**
+	 * Returns whether the instance is equal to another one.
+	 *
+	 * @param {ModelDesign|*} other
+	 * @returns {boolean}
+	 */
+	this.equals = function( other ) {
+		if( this === other ) {
+			return true;
+		}
+		if(
+			!( other instanceof Object )
+			|| other.constructor !== this.constructor
+		) {
+			return false;
+		}
+		return fields.equals( other.fields() );
+	};
 }
