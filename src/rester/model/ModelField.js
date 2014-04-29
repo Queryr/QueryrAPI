@@ -29,6 +29,9 @@ function ModelField( type, descriptors, assertion ) {
 	}
 	descriptors = copyObject( descriptors );
 
+	// TODO: just create value constructor instead; type.use( descriptors )
+	type.validateDescriptorValues( descriptors );
+
 	assertion = assertion || null;
 	if( assertion instanceof Assertion ) {
 		if( !type.validators().has( assertion.getType() ) ) {
@@ -75,7 +78,7 @@ function ModelField( type, descriptors, assertion ) {
 	 *       consisting out of other assertions.
 	 *
 	 * @param {Assertion|null} [newAssertion]
-	 * @returns {Assertion|ModelField} Setter: no effect on original, returns a copy.
+	 * @returns {Assertion|null|ModelField} Setter: no effect on original, returns a copy.
 	 */
 	this.assertion = function( newAssertion ) {
 		if( newAssertion === undefined ) {
@@ -133,10 +136,11 @@ function ModelField( type, descriptors, assertion ) {
 
 		for( descriptorName in descriptors1 ) {
 			ownDescriptorsLength++;
-			var ownDescriptor = descriptors1[ descriptorName ];
-			var otherDescriptor = descriptors2[ descriptorName ];
+			var descriptorDefinition = type.descriptor.get( descriptorName );
+			var ownDescriptorValue = descriptors1[ descriptorName ];
+			var otherDescriptorValue = descriptors2[ descriptorName ];
 
-			if( ownDescriptor !== otherDescriptor ) {
+			if( !descriptorDefinition.compare( ownDescriptorValue, otherDescriptorValue ) ) {
 				return false;
 			}
 		}

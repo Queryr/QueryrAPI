@@ -12,10 +12,11 @@ var TypeSpec = rester.typeSpeccer.TypeSpec;
 
 var someType =
 	new TypeSpec( 'someType' )
+		.descriptor( 'foo' )
 		.validator( 'someValidator', function() { return true; }, 'to be anything' )
 		.validator( 'someValidator2', function() { return true; }, 'to be anything too' )
 ;
-var anotherType = new TypeSpec( 'anotherType' );
+var anotherType = new TypeSpec( 'anotherType' ).descriptor( 'foo' );
 
 var assertionOfKnownType = new Assertion( 'someValidator', Assertion.unknown.only );
 var assertionOfKnownTypeCopy = new Assertion( 'someValidator', Assertion.unknown.only );

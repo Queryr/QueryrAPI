@@ -43,7 +43,7 @@ function ModelDesign( fields ) {
 		if( field === undefined ) {
 			return fields.get( fieldName );
 		}
-		var modifiedFields = this.fields().set( fieldName, field );
+		var modifiedFields = this.fields().copy().set( fieldName, field );
 		return new this.constructor( modifiedFields );
 	};
 

@@ -44,7 +44,6 @@ module.exports = function modelFieldMapInstanceProvider() {
 		'ModelFieldMap with three fields': [
 			threeFieldsFieldMap,
 			threeFieldsFieldMap.copy()
-
 		]
 	};
 };

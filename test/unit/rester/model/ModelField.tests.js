@@ -8,11 +8,15 @@ var ModelField = rester.model.ModelField;
 var Assertion = rester.assert.Assertion;
 var TypeSpec = rester.typeSpeccer.TypeSpec;
 
-var someType =
-	new TypeSpec( 'someType' )
+function decorateTestTypeSpec( typeSpec ) {
+	return typeSpec
+		.descriptor( 'foo' )
 		.validator( 'someValidator', function() { return true; }, 'to be anything' )
 		.validator( 'someValidator2', function() { return true; }, 'to be anything too' )
-;
+	;
+}
+var someType = decorateTestTypeSpec( new TypeSpec( 'someType' ) );
+
 var assertionOfUnknownType = new Assertion( 'equal', Assertion.unknown.and( [ 'foo' ] ) );
 var assertionOfKnownType = new Assertion( 'someValidator', Assertion.unknown.only );
 var assertionOfKnownType2 = new Assertion( 'someValidator2', Assertion.unknown.only );
@@ -41,6 +45,16 @@ describe( 'ModelField', function() {
 			],
 			'bad value given instead of descriptor': [
 				someType, 'foo', assertionOfKnownType
+			],
+			'unknown descriptor key given': [
+				someType, { 'unknownKey': 'value' }, 'foo'
+			],
+			'descriptor required by used type not specified': [
+				new TypeSpec( 'testType' ).descriptor( {
+					name: 'someDescriptor',
+					validate: TypeSpec.REQUIRED_DESCRIPTOR
+				}  ),
+				{}
 			]
 		};
 		_.each( errorCases, function( constructorParams, caseDescription ) {
@@ -64,6 +78,24 @@ describe( 'ModelField', function() {
 		],
 		'assertion and descriptors omitted': [
 			someType
+		],
+		'required descriptor given': [
+			decorateTestTypeSpec( new TypeSpec( 'testType' ) )
+				.descriptor( {
+					name: 'val',
+					validate: TypeSpec.REQUIRED_DESCRIPTOR
+				} ),
+			{ val: 'value' }
+		],
+		'required descriptor with validation needs fulfilled': [
+			decorateTestTypeSpec( new TypeSpec( 'testType' ) )
+				.descriptor( {
+					name: 'val',
+					validate: function( value ) {
+						return value === 42;
+					}
+				} ),
+			{ val: 42 }
 		]
 	};
 	_.each( cases, function( constructorParams, caseDescription ) {
@@ -127,17 +159,22 @@ function describeModelFieldWithConstructorParams( constructorParams ) {
 			}
 		);
 		it(
-			'returns an equal instance with the descriptors changed to an object',
+			'returns an equal instance with the descriptors changed to an(other) object and back again',
 			function() {
-				var fieldCopy = field.descriptors( { answer: 42 } );
-				expectChangedCopy( field, fieldCopy, { descriptors: { answer: 42 } } );
-			}
-		);
-		it(
-			'returns an equal instance with the descriptors changed to an empty object',
-			function() {
-				var fieldCopy = field.descriptors( {} );
-				expectChangedCopy( field, fieldCopy, { descriptors: {} } );
+				var origDescriptors = constructorParams[ 1 ] || {};
+				var newDescriptors = extendedOriginalDescriptors( { foo: 42 } );
+				var fieldWithChangedDescriptors = field.descriptors( newDescriptors );
+				expectChangedCopy(
+					field,
+					fieldWithChangedDescriptors,
+					{ descriptors: newDescriptors }
+				);
+				var fieldWithEmptyDescriptors = fieldWithChangedDescriptors.descriptors( origDescriptors );
+				expectChangedCopy(
+					fieldWithChangedDescriptors,
+					fieldWithEmptyDescriptors,
+					{ descriptors: origDescriptors }
+				);
 			}
 		);
 	} );
@@ -194,16 +231,26 @@ function describeModelFieldWithConstructorParams( constructorParams ) {
 
 	describe( '#copy( changes )', function() {
 		it( 'returns a copy with overwritten descriptors and assertion', function() {
+			var newDescriptors = extendedOriginalDescriptors( { foo: 123 } );
 			var fieldCopy = field.copy( {
-				descriptors: { foo: 123 },
+				descriptors: newDescriptors,
 				assertion: assertionOfKnownType2
 			} );
 			expectChangedCopy( field, fieldCopy, {
-				descriptors: { foo: 123 },
+				descriptors: newDescriptors,
 				assertion: assertionOfKnownType2
 			} );
 		} );
 	} );
+
+	function extendedOriginalDescriptors( extension ) {
+		var origDescriptors = constructorParams[ 1 ] || {};
+		return _.extend(
+			{},
+			origDescriptors,
+			extension
+		);
+	}
 }
 
 function expectChangedCopy( field, fieldCopy, changedValues ) {
