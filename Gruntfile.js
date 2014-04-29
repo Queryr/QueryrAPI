@@ -18,7 +18,7 @@ module.exports = function(grunt) {
 
 		mochaTest: {
 			test: {
-				src: ['test/unit/rester/**/*.test*.js'], // TODO: use regex for last * only to match [a-zA-Z]
+				src: ['test/unit/**/*.test*.js'], // TODO: use regex for last * only to match [a-zA-Z]
 				options: {}
 			}
 		},
