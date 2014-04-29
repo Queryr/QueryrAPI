@@ -40,8 +40,58 @@ describe( 'TypeSpec', function() {
 
 	describe( '#name()', function() {
 		it( 'returns the name given to the constructor', function() {
-			var typeSpec = new TypeSpec( 'foo' );
-			expect( typeSpec.name() ).to.be( 'foo' );
+			expect( new TypeSpec( 'foo' ).name() ).to.be( 'foo' );
+		} );
+	} );
+
+	describe( '#descriptor( name ) and #descriptor.get()', function() {
+		it( 'returns a full descriptor object', function() {
+			expect(
+				typeSpec.descriptor( 'foo' ).descriptor.get( 'foo' )
+			).to.eql( {
+				validate: TypeSpec.OPTIONAL_DESCRIPTOR,
+				compare: TypeSpec.SIMPLE_DESCRIPTOR_EQUALITY
+			} );
+		} );
+	} );
+
+	describe( '#descriptor( object ) and #descriptor.get()', function() {
+		it( 'returns an object with omitted values set to default values', function() {
+			expect(
+				typeSpec.descriptor( {
+					name: 'foo'
+				} ).descriptor.get( 'foo' )
+			).to.eql( {
+				validate: TypeSpec.OPTIONAL_DESCRIPTOR,
+				compare: TypeSpec.SIMPLE_DESCRIPTOR_EQUALITY
+			} );
+		} );
+		
+		it( 'returns an object with validate and compare fields as given', function() {
+			var fn1 = function() {};
+			var fn2 = function() {};
+			expect(
+				typeSpec.descriptor( {
+					name: 'foo',
+					validate: fn1,
+					compare: fn2
+				} ).descriptor.get( 'foo' )
+			).to.eql( {
+				validate: fn1,
+				compare: fn2
+			} );
+		} );
+	} );
+
+	describe( '#descriptor( name, validationFn )', function() {
+		it( 'returns a full descriptor object with validatorFn as validator', function() {
+			var fn1 = function() {};
+			expect(
+				typeSpec.descriptor( 'foo', fn1 ).descriptor.get( 'foo' )
+			).to.eql( {
+				validate: fn1,
+				compare: TypeSpec.SIMPLE_DESCRIPTOR_EQUALITY
+			} );
 		} );
 	} );
 
@@ -67,9 +117,24 @@ describe( 'TypeSpec', function() {
 			expect( typeSpec.use() ).to.be.a( Function );
 		} );
 
-		it( 'throws an error if descriptors are registered for the type spec', function() {
+		it( 'throws an error if required descriptor is registered for the type spec but no value '
+			+ 'provided for that descriptor',
+			function() {
+				typeSpec.descriptor( 'foo', TypeSpec.REQUIRED_DESCRIPTOR );
+				expect( function() { typeSpec.use(); } ).to.throwError();
+			}
+		);
+
+		it( 'throws no error if descriptor registered for type but not given if optional descriptor',
+			function() {
+				typeSpec.descriptor( 'foo', TypeSpec.OPTIONAL_DESCRIPTOR );
+				expect( function() { typeSpec.use(); } ).to.not.throwError();
+			}
+		);
+
+		it( 'registered descriptors not required by default', function() {
 			typeSpec.descriptor( 'foo' );
-			expect( function() { typeSpec.use(); } ).to.throwError();
+			expect( function() { typeSpec.use(); } ).to.not.throwError();
 		} );
 	} );
 

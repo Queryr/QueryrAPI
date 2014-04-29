@@ -1,7 +1,5 @@
 'use strict';
 
-var expect = require( 'expect.js' );
-
 var describeTypeSpecCreator = require( '../describe/describeTypeSpecCreator' );
 
 describe( 'boolean TypeSpec instance', function() {
