@@ -8,6 +8,8 @@ var ModelField = require( './ModelField' );
 var Assertion = require( '../assert/Assertion' );
 var TypeSpec = require( '../typeSpeccer/TypeSpec' );
 
+var mixedType = require( '../typeSpeccer/basicTypeSpecs' ).mixed;
+
 var INTERNAL_ABORT = {};
 
 /**
@@ -33,23 +35,57 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	var self = this;
 	var models = {};
 
-	var context = null;
-	var currentGrammarNode = null;
-
-	function setContext( newContext ) {
-		context = newContext;
+	var context = [];
+	function enterContext( newContext ) {
+		context.push( newContext );
 	}
-
-	function inContext( context ) {
-		// TODO
+	function updateContext( newContext ) {
+		if( context.length === 0 ) {
+			throw new Error( 'no context set which could be updated' );
+		}
+		context[ context.length - 1 ] = newContext;
+	}
+	function replaceContext( oldContext, newContext ) {
+		var index = context.indexOf( oldContext );
+		if( index !== -1 ) {
+			context[ index ] = newContext;
+		}
+	}
+	function backIntoContextOf( contextConstructor ) {
+		for( var i = context.length - 1; i >= 0; i-- ) {
+			if( context[ i ] instanceof contextConstructor ) {
+				context = context.slice( 0, i + 1 );
+				return;
+			}
+		}
+		throw new Error( 'not within given context' );
+	}
+	function inContext( expectedContext ) {
+		return getContext() === expectedContext;
+	}
+	function inContextOf( contextConstructor ) {
+		return getContext() instanceof contextConstructor;
+	}
+	function withinContext( expectedContext ) {
+		return !_.every( context, function( value ) {
+			return value !== expectedContext;
+		} );
+	}
+	function withinContextOf( expectedContext ) {
+		return !_.every( context, function( value ) {
+			return !( value instanceof expectedContext );
+		} );
+	}
+	function getContext() {
+		return context[ context.length - 1 ];
 	}
 
 	var sentence = [];
 	function getLastWord() {
-		return sentence[ sentence.length - 2 ] || null;
+		return sentence[ sentence.length - 2 ];
 	}
 	function getCurrentWord() {
-		return sentence[ sentence.length -1 ] || null;
+		return sentence[ sentence.length -1 ];
 	}
 	var currentTopic = '';
 	var callbacksWordTopic = {}; // *[ word ][ topic ]
@@ -64,26 +100,19 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			callbacks.push( callback );
 
 			_defineMember( word, _asFunction || callback.length > 0 );
+			return callback;
 		};
 		ret.topic = function( topic ) {
 			_topic = topic;
 			return ret;
 		};
-		ret.function = function( fn ) {
+		ret.function = function( callback ) {
 			_asFunction = true;
-			if( fn ) {
-				ret( fn );
-			} else {
-				return ret;
-			}
-			return fn ? ret( fn ) : ret;
+			return callback ? ret( callback ) : ret;
 		};
 		ret.as = ret.with = ret;
 
-		if( callback ) {
-			return ret( callback );
-		}
-		return ret;
+		return callback ? ret( callback ) : ret;
 	}
 
 	function _defineMember( word, asFunction ) {
@@ -168,13 +197,14 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			currentTopic = '';
 		},
 		/**
-		 * Returns whether a certain word has been called right before the current one.
+		 * Returns whether one or more certain words have been called right before the current one.
 		 *
-		 * @param {string|string[]} word One or more words of whom one is expected to be the
-		 *        direct precursor of the current word.
+		 * @param {string} lastFewWords One or more words separated by '.'
 		 */
-		comesFrom: function( word ) {
-			return word === getLastWord();
+		comesFrom: function( lastFewWords ) {
+			var words = lastFewWords.split( '.' );
+			var lastWords = sentence.slice( -words.length - 1, -1 );
+			return lastFewWords === lastWords.join( '.' );
 		}
 	};
 
@@ -199,16 +229,18 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		} else {
 			baseModel = new ModelDesign();
 		}
+
 		updateModel = function( model ) {
 			if( name !== undefined ) {
 				models[ name ] = model;
 			}
+			replaceContext( currentModel, model );
 			currentModel = model;
 		};
+		sentence.push( 'model' );
+		enterContext( baseModel );
 		updateModel( baseModel );
 
-		sentence.push( 'model' );
-		setContext( baseModel );
 		return this;
 	};
 
@@ -232,65 +264,84 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		return _.extend( {}, models );
 	};
 
-	var nextFieldName = null;
-	declare( 'field', function( fieldName ) {
+	var currentFieldName;
+
+	// model()."field"( '...' )
+	declare( 'field' )( function( fieldName ) {
 		this.startTopic();
-		nextFieldName = fieldName;
+		if( !inContextOf( ModelDesign ) ) {
+			backIntoContextOf( ModelDesign );
+		}
+		currentFieldName = fieldName;
 	} );
 
+	// .field( '...' )."as".type:
 	declare( 'as' ).with.topic( 'field' )( function() {
 		this.continueIf( this.comesFrom( 'field' ) );
 	} );
 
+	// .type1.[...].or."as".type2:
 	declare( 'as' )( function() {
-		this.continueIf( inContext( ModelField ) );
+		this.continueIf( inContextOf( ModelField ) );
 		this.continueIf( this.comesFrom( 'or' ) );
 	} );
 
-	declare( 'or', function() {
-		this.continueIf( inContext( ModelField ) );
-		// Allows for defining a mixed type for a field or for joining assertions.
-		// TODO: handle assertions "or" in generic way with separate "declare".
+	// .type1.[...]."or".as.type2:
+	declare( 'or' )( function() {
+		this.continueIf( inContextOf( ModelField ) );
 	} );
 
 	_.each( usableFieldTypes, function( typeSpec ) {
 		var typeName = typeSpec.name();
 
+		// .field( '...' ).as."type":
 		declare( typeName ).with.topic( 'field' )( function() {
-			//this.continueIf( nextFieldName !== null );
-			// NOTE: Don't need this since this fn will only run if topic is still running.
-
 			var newField = new ModelField( typeSpec );
+
 			updateModel(
-				context = context.field( nextFieldName, newField )
+				getContext().field( currentFieldName, newField )
 			);
-			nextFieldName = null;
-			setContext( newField );
+			enterContext( newField );
 
 			this.endTopic();
 		} );
 
-		declare( typeName, function() {
-			this.continueIf( inContext( ModelField ) );
-			this.continueIf( context.getTypeSpec() );
+		// .type1.[...].or.as."type2" => mixed type:
+		declare( typeName )( function() {
+			this.continueIf( inContextOf( ModelField ) );
+			this.continueIf( this.comesFrom( 'or.as' ) )
 
-			// TODO: change typeSpec to MixedType
+			var otherField = getContext();
+			var newField = new ModelField( typeSpec );
+
+			var mixedField = new ModelField( mixedType, {
+				restrictedTo: [
+					otherField,
+					newField
+				]
+			} );
+			updateModel(
+				currentModel.field( currentFieldName, mixedField )
+			);
+			updateContext( mixedField );
 		} );
 
-		typeSpec.validators().each( function( validator, validatorName ) {
+// TODO: logical validators should be out of this so they won't be created as functions but instead
+//       as getters. Without this distinction, or() will conflict with other context or usage above.
+/*		typeSpec.validators().each( function( validator, validatorName ) {
 			declare( validatorName ).as.function( function() {
-				this.continueIf( inContext( ModelField ) );
-				this.continueIf( context.getTypeSpec() === typeSpec );
+				this.continueIf( inContextOf( ModelField ) );
+				this.continueIf( getContext().typeSpec() === typeSpec );
 
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
-				context.addAssertion( assertion );
+				getContext().addAssertion( assertion );
 
 				// TODO: handle properties, e.g. 'length': .with.length.between(...)
 			} );
-		} );
+		} );*/
 
 		declare( 'with' )( function() {
-			this.continueIf( inContext( ModelField ) );
+			this.continueIf( inContextOf( ModelField ) );
 			this.continueIf( this.comesFrom( TYPE_NAMES ) );
 		} );
 	} );

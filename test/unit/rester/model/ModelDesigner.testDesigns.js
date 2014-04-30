@@ -29,6 +29,15 @@ var designs = {
 				.set( 'length', new ModelField( types.number ) )
 		)
 	],
+	'with "value" field as mixed': [
+		function() {
+			this.field( 'value' ).as.mixed;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'value', new ModelField( types.mixed ) )
+		)
+	],
 	'with "name" field as string': [
 		function() {
 			this.field( 'name' ).as.string;
@@ -38,13 +47,33 @@ var designs = {
 				.set( 'name', new ModelField( types.string ) )
 		)
 	],
-	'with "value" field as mixed': [
+	'with "name" field as string and "width" and "height" as number, order of fields does not matter': [
 		function() {
-			this.field( 'value' ).as.mixed;
+			this
+				.field( 'height' ).as.number
+				.field( 'width' ).as.number
+				.field( 'name' ).as.string
+			;
 		},
 		new ModelDesign(
 			new ModelFieldMap()
-				.set( 'value', new ModelField( types.mixed ) )
+				.set( 'width', new ModelField( types.number ) )
+				.set( 'name', new ModelField( types.string ) )
+				.set( 'height', new ModelField( types.number ) )
+		)
+	],
+	'with "name" field as string or boolean': [
+		function() {
+			this.field( 'name' ).as.string.or.as.boolean;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'name', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.boolean )
+					]
+				} ) )
 		)
 	]
 };
@@ -53,7 +82,7 @@ describe( 'ModelDesigner', function() {
 	var typesArray = _.values( types );
 
 	_.each( designs, function( designCase, designDescription ) {
-		describe( 'designing a ModelDesign ' + designDescription + 'and retrieving it via #design()', function() {
+		describe( 'designing a ModelDesign ' + designDescription + ' and retrieving it via #design()', function() {
 			var designedModel, expectedModel;
 
 			beforeEach( function() {
@@ -73,7 +102,7 @@ describe( 'ModelDesigner', function() {
 			} );
 
 			it( 'looks like expected', function() {
-				expect( designedModel.equals( expectedModel ) ).to.be.ok();
+				expect( designedModel.equals( expectedModel ) ).to.be( true );
 			} );
 		} );
 	} );
