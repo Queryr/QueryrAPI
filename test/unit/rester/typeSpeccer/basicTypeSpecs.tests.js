@@ -11,6 +11,7 @@ var basicTypeSpecs = rester.typeSpeccer.basicTypeSpecs;
 var BASIC_TYPES = [ // TODO: Complete list.
 	'number',
 	'boolean',
+	'null',
 	'string',
 	'mixed'
 ];

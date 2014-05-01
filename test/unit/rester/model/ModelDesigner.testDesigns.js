@@ -47,6 +47,18 @@ var designs = {
 				.set( 'name', new ModelField( types.string ) )
 		)
 	],
+	'with one field defined twice, second definition overwrites first one': [
+		function() {
+			this
+				.field( 'length' ).as.string // overwrite in next line;
+				.field( 'length' ).as.number
+			;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'length', new ModelField( types.number ) )
+		)
+	],
 	'with "name" field as string and "width" and "height" as number, order of fields does not matter': [
 		function() {
 			this
@@ -75,7 +87,50 @@ var designs = {
 					]
 				} ) )
 		)
-	]
+	],
+	'with "address" field as string or null': [
+		function() {
+			this
+				.field( 'address' ).as.string.or.as.null;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'address', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.null )
+					]
+				} ) )
+		)
+	],
+//	'with "value" field as mixed (string or boolean)': [
+//		function() {
+//			this
+//				.field( 'value' ).as.mixed.restricted.to(
+//					new ModelField( types.string ),
+//					new ModelField( types.boolean )
+//				)
+//			;
+//		},
+//		new ModelDesign(
+//			new ModelFieldMap()
+//				.set( 'value', new ModelField( types.mixed, {
+//					restrictedTo: [
+//						new ModelField( types.string ),
+//						new ModelField( types.boolean )
+//					]
+//				} ) )
+//		)
+//	],
+//	'with "name" field as string or null': [
+//		function() {
+//			this.field( 'name' ).as.string.or.null;
+//		},
+//		new ModelDesign(
+//			new ModelFieldMap()
+//				.set( 'name', new ModelField( types.string ) )
+//		)
+//	]
 };
 
 describe( 'ModelDesigner', function() {
