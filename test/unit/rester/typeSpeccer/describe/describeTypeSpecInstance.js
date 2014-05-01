@@ -15,10 +15,12 @@ function describeTypeSpecInstance( typeSpec, description ) {
 		expect( typeSpec ).to.be.a( TypeSpec );
 	} );
 
-	testValueInstanceValidation( typeSpec.use( {} ), {
-		valid: description.valid,
-		invalid: description.invalid
-	} );
+	if( description.valid || description.invalid ) {
+		testValueInstanceValidation( typeSpec.use( {} ), {
+			valid: description.valid,
+			invalid: description.invalid
+		} );
+	}
 
 	_.each(
 		description.validators || {},
@@ -61,14 +63,14 @@ function describeTypeSpecInstance( typeSpec, description ) {
 
 	function testValueInstanceValidation( valueConstructor, values ) {
 		describe( 'value instance validation', function() {
-			_.each( values.valid, function( value ) {
+			_.each( values.valid || [], function( value ) {
 				it( 'accepts ' + value + ' as valid', function() {
 					expect( function() {
 						valueConstructor( value );
 					} ).to.not.throwError();
 				} );
 			} );
-			_.each( values.invalid, function( value ) {
+			_.each( values.invalid || [], function( value ) {
 				it( 'rejects ' + value + ' as invalid', function() {
 					expect( function() {
 						valueConstructor( value );

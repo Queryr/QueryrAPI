@@ -5,7 +5,8 @@ var BASIC_TYPES = [ // TODO: Complete list.
 	'boolean',
 	'null',
 	'string',
-	'mixed'
+	'mixed',
+	'instance'
 ];
 
 var typeSpeccer = require( '..' );
