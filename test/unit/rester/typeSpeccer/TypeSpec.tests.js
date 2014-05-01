@@ -44,6 +44,18 @@ describe( 'TypeSpec', function() {
 		} );
 	} );
 
+	describe( '#descriptor()', function() {
+		it( 'returns a self-reference', function() {
+			expect( typeSpec.descriptor( 'foo' ) ).to.be( typeSpec );
+		} );
+	} );
+
+	describe( '#descriptor.get()', function() {
+		it( 'returns null if descriptor has not been set', function() {
+			expect( typeSpec.descriptor.get( 'unknownDescriptor' ) ).to.be( null );
+		} );
+	} );
+
 	describe( '#descriptor( name ) and #descriptor.get()', function() {
 		it( 'returns a full descriptor object', function() {
 			expect(
@@ -65,6 +77,13 @@ describe( 'TypeSpec', function() {
 				validate: TypeSpec.OPTIONAL_DESCRIPTOR,
 				compare: TypeSpec.SIMPLE_DESCRIPTOR_EQUALITY
 			} );
+		} );
+
+		it( 'returns a copy of the object set, not the original instance or the internal one', function() {
+			var originalObj = { name: 'foo' };
+			var descriptorObj = typeSpec.descriptor( originalObj ).descriptor.get( originalObj.name );
+			expect( descriptorObj ).not.to.be( originalObj );
+			expect( typeSpec.descriptor.get( originalObj.name ) ).not.to.be( descriptorObj );
 		} );
 		
 		it( 'returns an object with validate and compare fields as given', function() {
@@ -91,6 +110,26 @@ describe( 'TypeSpec', function() {
 			).to.eql( {
 				validate: fn1,
 				compare: TypeSpec.SIMPLE_DESCRIPTOR_EQUALITY
+			} );
+		} );
+	} );
+
+	describe( '#descriptors()', function() {
+		it( 'returns an object but not the internal one', function() {
+			expect( typeSpec.descriptors() ).to.be.an( Object );
+			expect( typeSpec.descriptors() ).not.to.be( typeSpec.descriptors() );
+		} );
+
+		it( 'returns all descriptor objects set so far but not as reference to the internal ones', function() {
+			typeSpec.descriptor( 'foo' );
+			typeSpec.descriptor( 'bar' );
+			typeSpec.descriptor( {
+				name: 'another'
+			} );
+			expect( _.keys( typeSpec.descriptors() ) ).to.eql( [ 'foo', 'bar', 'another' ] );
+			_.each( typeSpec.descriptors(), function( descriptor, name ) {
+				expect( descriptor ).to.eql( typeSpec.descriptor.get( name ) );
+				expect( descriptor ).not.to.be( typeSpec.descriptor.get( name ) );
 			} );
 		} );
 	} );

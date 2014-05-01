@@ -112,7 +112,27 @@ var TypeSpec = module.exports = function TypeSpec( name ) {
 	 * @returns {Object}
 	 */
 	this.descriptor.get = function( name ) {
-		return descriptors[ name ] || null;
+		var descriptor = descriptors[ name ];
+		if( !descriptor ) {
+			return null;
+		}
+		return {
+			validate: descriptor.validate,
+			compare: descriptor.compare
+		};
+	};
+
+	/**
+	 * Returns a copy of all descriptors.
+	 *
+	 * @returns {Object}
+	 */
+	this.descriptors = function() {
+		var descriptorsCopy = {};
+		for( var name in descriptors ) {
+			descriptorsCopy[ name ] = this.descriptor.get( name );
+		}
+		return descriptorsCopy;
 	};
 
 	/**
