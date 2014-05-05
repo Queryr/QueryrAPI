@@ -88,6 +88,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		return sentence[ sentence.length -1 ];
 	}
 	var currentTopic = '';
+	var currentTopicStopper = [];
 	var callbacksWordTopic = {}; // *[ word ][ topic ]
 
 	function declare( word, callback ) {
@@ -152,10 +153,10 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			sentence.push( word );
 
 			_.each( callbacksWordTopic[ word ][ currentTopic ], function( callback, i ) {
+				if( foundCallback ) { return; } // TODO: really wanna stop here?
 				try {
 					ret = callback.apply( callbackObject, originalArgs );
 					foundCallback = true;
-					return false;
 				} catch( error ) {
 					if( error === INTERNAL_ABORT ) {
 						return; // not right version of the word in this situation, try next...
@@ -165,8 +166,20 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			} );
 			if( !foundCallback ) {
 				throw new Error( '"' + word + '" has no meaning in current context ('
-					+ sentence.join( ' ' ) + ')' );
+					+ sentence.slice( 0, -1 ).join( '.' ) + ')' );
 			}
+
+			if( currentTopicStopper.length > 0 ) {
+				_.each( currentTopicStopper, function( stopperFn ) {
+					if( stopperFn() ) {
+						currentTopicStopper = _.without( currentTopicStopper, stopperFn );
+					}
+				} );
+				if( currentTopicStopper.length === 0 ) {
+					callbackObject.endTopic();
+				}
+			}
+
 			if( ret !== undefined ) {
 				return ret;
 			}
@@ -190,11 +203,14 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		stopIf: function( conditionResult ) {
 			this.continueIf( !conditionResult );
 		},
-		startTopic: function() {
-			currentTopic = getCurrentWord();
+		startTopic: function( topic ) {
+			currentTopic = topic !== undefined ? topic : getCurrentWord();
 		},
 		endTopic: function() {
 			currentTopic = '';
+		},
+		keepTopicUntil: function( fn ) {
+			currentTopicStopper.push( fn );
 		},
 		/**
 		 * Returns whether one or more certain words have been called right before the current one.
@@ -265,8 +281,11 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	};
 
 	var currentFieldName;
+	var currentFieldType;
+	var currentSubField;
+	var subFieldDescriptors;
 
-	// model()."field"( '...' )
+	// model()."field( '...' )"
 	declare( 'field' )( function( fieldName ) {
 		this.startTopic();
 		if( !inContextOf( ModelDesign ) ) {
@@ -282,7 +301,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 	// .type1.[...].or."as".type2:
 	declare( 'as' )( function() {
-		this.continueIf( inContextOf( ModelField ) );
+		this.continueIf( withinContextOf( ModelField ) );
 		this.continueIf( this.comesFrom( 'or' ) );
 	} );
 
@@ -296,35 +315,75 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 		// .field( '...' ).as."type":
 		declare( typeName ).with.topic( 'field' )( function() {
-			var newField = new ModelField( typeSpec );
+			currentFieldType = typeSpec;
+			subFieldDescriptors = {};
 
-			updateModel(
-				getContext().field( currentFieldName, newField )
-			);
-			enterContext( newField );
-
-			this.endTopic();
+			this.keepTopicUntil( function() {
+				var newField;
+				try{
+					newField = new ModelField( typeSpec, subFieldDescriptors );
+				} catch( e ) {
+					return false;
+				}
+				updateModel(
+					getContext().field( currentFieldName, newField )
+				);
+				enterContext( newField );
+				currentSubField = newField;
+				return true;
+			} );
 		} );
 
 		// .type1.[...].or.as."type2" => mixed type:
 		declare( typeName )( function() {
-			this.continueIf( inContextOf( ModelField ) );
-			this.continueIf( this.comesFrom( 'or.as' ) )
+			this.continueIf( withinContextOf( ModelField ) );
+			this.continueIf( this.comesFrom( 'or.as' ) );
 
-			var otherField = getContext();
-			var newField = new ModelField( typeSpec );
+			this.startTopic( 'field' );
+			backIntoContextOf( ModelField );
 
-			var mixedField = new ModelField( mixedType, {
-				restrictedTo: [
-					otherField,
-					newField
-				]
+			var currentField = getContext();
+			currentFieldType = typeSpec;
+			subFieldDescriptors = {};
+
+			this.keepTopicUntil( function() {
+				var newField;
+				try{
+					newField = new ModelField( typeSpec, subFieldDescriptors );
+				} catch( e ) {
+					return false;
+				}
+				var mixedField = new ModelField( mixedType, {
+					restrictedTo: [
+						currentField,
+						newField
+					]
+				} );
+				updateModel(
+					currentModel.field( currentFieldName, mixedField )
+				);
+				updateContext( mixedField );
+				currentSubField = newField;
+				return true;
 			} );
-			updateModel(
-				currentModel.field( currentFieldName, mixedField )
-			);
-			updateContext( mixedField );
 		} );
+
+		var descriptorNames = _.keys( typeSpec.descriptors() );
+		_.each( typeSpec.descriptors(), function( descriptor, descriptorName ) {
+			var otherDescriptorNames = _.without( descriptorName, descriptorNames );
+
+			// .type."descriptor1( value )"[ ."descriptorN( value )" ... ]
+			declare( descriptorName ).with.topic( 'field' )( function( descriptorValue ) {
+				this.continueIf( currentFieldType === typeSpec );
+//				this.continueIf(
+//					this.comesFrom( typeName )
+//					|| this.comesFrom( otherDescriptorNames )
+//				);
+				subFieldDescriptors[ descriptorName ] = descriptorValue;
+			} );
+		} );
+
+
 
 // TODO: logical validators should be out of this so they won't be created as functions but instead
 //       as getters. Without this distinction, or() will conflict with other context or usage above.

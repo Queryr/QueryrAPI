@@ -24,8 +24,10 @@ module.exports = function( typeSpec ) {
 				if( descriptor.length !== otherDescriptor.length ) {
 					return false;
 				}
-				return descriptor.every( function( restrictionType, i ) {
-					return restrictionType.equals( otherDescriptor[ i ] );
+				return descriptor.every( function( restrictionType ) {
+					return otherDescriptor.some( function( otherRestrictionType ) {
+						return restrictionType.equals( otherRestrictionType );
+					} );
 				} );
 			}
 		} )
