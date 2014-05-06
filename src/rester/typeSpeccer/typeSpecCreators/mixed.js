@@ -37,7 +37,7 @@ module.exports = function( typeSpec ) {
 			}
 			var restrictionTypes = descriptors.restrictedTo;
 			if( restrictionTypes instanceof ModelField ) {
-				restrictionTypes = [ restrictionTypes ];
+				descriptors.restrictedTo = restrictionTypes = [ restrictionTypes ];
 			}
 			var valueIsSupported = false;
 			for( var i = 0; i < restrictionTypes.length; i++ ) {

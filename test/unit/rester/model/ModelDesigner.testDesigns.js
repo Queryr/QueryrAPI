@@ -8,7 +8,14 @@ var ModelDesigner = rester.model.ModelDesigner;
 var ModelDesign = rester.model.ModelDesign;
 var ModelField = rester.model.ModelField;
 var ModelFieldMap = rester.model.ModelFieldMap;
+var Assertion = rester.assert.Assertion;
 var types = rester.typeSpeccer.basicTypeSpecs;
+
+/**
+ * For debugging purposes.
+ * Can be used as value within a test case array to force the test runner to execute this test only.
+ */
+var TEST_EXCLUSIVELY = 'only';
 
 var designs = {
 	'with "isNew" field as boolean': [
@@ -79,16 +86,43 @@ var designs = {
 				.set( 'height', new ModelField( types.number ) )
 		)
 	],
-	'with "name" field as string or boolean': [
-		function() {
-			this.field( 'name' ).as.string.or.as.boolean;
+	'with mixed type of string and boolean': [
+		function( newCase ) {
+			newCase( 'using featured short syntax' )
+				.field( 'value' ).as.string.or.as.boolean
+			;
+			newCase( 'using "mixed" type directly together with optional "restrictedTo" descriptor' )
+				.field( 'value' ).as.mixed.restrictedTo( [
+					new ModelField( types.string ),
+					new ModelField( types.boolean )
+				] )
+			;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'value', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.boolean )
+					]
+				} ) )
+		)
+	],
+	'with "name" field as string, boolean, number or null': [
+		function( newCase ) {
+			newCase()
+				.field( 'name' ).as.string.or.as.boolean.or.as.number.or.as.null;
+			newCase()
+				.field( 'name' ).as.number.or.as.boolean.or.as.null.or.as.string;
 		},
 		new ModelDesign(
 			new ModelFieldMap()
 				.set( 'name', new ModelField( types.mixed, {
 					restrictedTo: [
 						new ModelField( types.string ),
-						new ModelField( types.boolean )
+						new ModelField( types.boolean ),
+						new ModelField( types.number ),
+						new ModelField( types.null )
 					]
 				} ) )
 		)
@@ -107,7 +141,7 @@ var designs = {
 				} ) )
 		)
 	],
-	'with "date" field as instance of Date': [
+	'with "date" field as instance of Date (required descriptor test)': [
 		function() {
 			this.field( 'date' ).as.instance.of( Date );
 		},
@@ -142,6 +176,8 @@ var designs = {
 					.as.instance.of( Date )
 					.or
 					.as.instance.of( RegExp )
+					.or
+					.as.instance.of( Function )
 				.field( 'date' )
 					.as.instance.of( Date ).or.as.null
 			;
@@ -151,7 +187,8 @@ var designs = {
 				.set( 'someObj', new ModelField( types.mixed, {
 					restrictedTo: [
 						new ModelField( types.instance, { of: Date } ),
-						new ModelField( types.instance, { of: RegExp } )
+						new ModelField( types.instance, { of: RegExp } ),
+						new ModelField( types.instance, { of: Function } )
 					]
 				} ) )
 				.set( 'date', new ModelField( types.mixed, {
@@ -166,8 +203,19 @@ var designs = {
 
 describe( 'ModelDesigner', function() {
 	var typesArray = _.values( types );
-
+    var exclusiveDesigns = {};
 	_.each( designs, function( designCase, designDescription ) {
+		if( designCase.indexOf( TEST_EXCLUSIVELY ) !== -1 ) {
+			exclusiveDesigns[ designDescription ] = _.without( designCase, TEST_EXCLUSIVELY );
+		}
+	} );
+	var testDesigns = _.size( exclusiveDesigns ) > 0 ? exclusiveDesigns : designs;
+	if( testDesigns === exclusiveDesigns ) {
+		console.log( 'WARNING: ' + ( _.size( designs ) - _.size( exclusiveDesigns ) )
+			+ ' ModelDesigner design tests skipped due to usage of TEST_EXCLUSIVELY flag.' );
+	}
+
+	_.each( testDesigns, function( designCase, designDescription ) {
 		var designedModels = {}
 		var designerFn = designCase[ 0 ];
 		var expectedModel = designCase[ 1 ];
@@ -187,13 +235,13 @@ describe( 'ModelDesigner', function() {
 		designerFn.call( newDesignCase( '*' ), newDesignCase );
 		newDesignCase();
 
-		if( _.keys( designedModels ).length > 1 ) {
+		if( _.size( designedModels ) > 1 ) {
 			// Remove empty model designed when newDesignCase() got called manually.
 			delete( designedModels[ '*' ] );
 		}
 
 		_.each( designedModels, function( designedModel, designedModelCaseDescription ) {
-			if( _.keys( designedModels ).length > 1 ) {
+			if( _.size( designedModels ) > 1 ) {
 				designDescription += ' ' + designedModelCaseDescription;
 			}
 			describe( 'designing a ModelDesign ' + designDescription + ' and retrieving it via #design()', function() {

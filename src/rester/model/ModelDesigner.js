@@ -12,6 +12,14 @@ var mixedType = require( '../typeSpeccer/basicTypeSpecs' ).mixed;
 
 var INTERNAL_ABORT = {};
 
+// TODO: Separate actual grammar definition rules, context manager and possibly other generic code
+//  for building DSLs from actual ModelDesigner.
+
+// TODO: Think about implementing this as action/event recorder where we still use the functions for
+//  defining the grammar in here but using action objects for better structuring the code of how to
+//  build the model definition.
+// Also see https://speakerdeck.com/mathiasverraes/practical-event-sourcing
+
 /**
  * Allows to describe models. Knows about the different pieces (field types) that can be used to
  * design a model definition.
@@ -49,7 +57,18 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		var index = context.indexOf( oldContext );
 		if( index !== -1 ) {
 			context[ index ] = newContext;
+			return true;
 		}
+		return false;
+	}
+	function backIntoContext( contextObj ) {
+		for( var i = context.length - 1; i >= 0; i-- ) {
+			if( context[ i ] === contextObj ) {
+				context = context.slice( 0, i + 1 );
+				return;
+			}
+		}
+		throw new Error( 'not within given context' );
 	}
 	function backIntoContextOf( contextConstructor ) {
 		for( var i = context.length - 1; i >= 0; i-- ) {
@@ -58,7 +77,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 				return;
 			}
 		}
-		throw new Error( 'not within given context' );
+		throw new Error( 'not within context of given type' );
 	}
 	function inContext( expectedContext ) {
 		return getContext() === expectedContext;
@@ -78,6 +97,9 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	}
 	function getContext() {
 		return context[ context.length - 1 ];
+	}
+	function getPreviousContext() {
+		return context[ context.length - 2 ];
 	}
 
 	var sentence = [];
@@ -152,7 +174,11 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 			sentence.push( word );
 
-			_.each( callbacksWordTopic[ word ][ currentTopic ], function( callback, i ) {
+			var callbacks = callbacksWordTopic[ word ][ currentTopic ];
+			if( !callbacks ) {
+				throw new Error( 'no meanings for word "' + word + '" within current topic "' + currentTopic + '"' );
+			}
+			_.each( callbacks, function( callback, i ) {
 				if( foundCallback ) { return; } // TODO: really wanna stop here?
 				try {
 					ret = callback.apply( callbackObject, originalArgs );
@@ -165,13 +191,18 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 				}
 			} );
 			if( !foundCallback ) {
-				throw new Error( '"' + word + '" has no meaning in current context ('
-					+ sentence.slice( 0, -1 ).join( '.' ) + ')' );
+				var totalMeanings = _.flatten( callbacksWordTopic[ word ] ).length;
+				throw new Error( '"' + word + '" has no meaning in current context '
+					+ sentence.slice( 0, -1 ).join( '.' ) + ' (' + callbacks.length
+					+ ( currentTopic
+						? ' meanings within current topic "' + currentTopic + '", '
+						: ' meanings outside of any topic, '
+					) + totalMeanings + ' meanings in total)' );
 			}
 
 			if( currentTopicStopper.length > 0 ) {
 				_.each( currentTopicStopper, function( stopperFn ) {
-					if( stopperFn() ) {
+					if( stopperFn() !== false ) {
 						currentTopicStopper = _.without( currentTopicStopper, stopperFn );
 					}
 				} );
@@ -187,7 +218,6 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		};
 	}
 
-
 	var callbackObject = {
 		/**
 		 * Will add a condition for this function to continue.
@@ -196,21 +226,27 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			if( !conditionResult ) {
 				throw INTERNAL_ABORT;
 			}
+			return this;
 		},
 		/**
 		 * Will add a condition for this function to stop.
 		 */
 		stopIf: function( conditionResult ) {
 			this.continueIf( !conditionResult );
+			return this;
 		},
 		startTopic: function( topic ) {
 			currentTopic = topic !== undefined ? topic : getCurrentWord();
+			return this;
 		},
 		endTopic: function() {
 			currentTopic = '';
+			currentTopicStopper = [];
+			return this;
 		},
 		keepTopicUntil: function( fn ) {
 			currentTopicStopper.push( fn );
+			return this;
 		},
 		/**
 		 * Returns whether one or more certain words have been called right before the current one.
@@ -226,6 +262,23 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 	var currentModel;
 	var updateModel;
+	/**
+	 * The field last added. Can be a single field or a field within a mixed field. If the latter,
+	 * then currentMixedField will be set to the mixed field.
+	 *
+	 * @type ModelField
+	 */
+	var currentField;
+	var currentMixedField;
+	/**
+	 * Function for replacing the currentField within currentModel. Will affect several "current"
+	 * variables.
+	 *
+	 * @type Function
+	 * @param {ModelField} newField
+	 */
+	var updateCurrentField;
+
 	/**
 	 * Defines a new ModelDesign instance and stores it under the given name (optional).
 	 * If no name is given, the ModelDesign instance can be received by #designTemplate().
@@ -281,8 +334,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	};
 
 	var currentFieldName;
-	var currentFieldType;
-	var currentSubField;
+	var subFieldType;
 	var subFieldDescriptors;
 
 	// model()."field( '...' )"
@@ -315,26 +367,23 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 
 		// .field( '...' ).as."type":
 		declare( typeName ).with.topic( 'field' )( function() {
-			currentFieldType = typeSpec;
+			subFieldType = typeSpec;
 			subFieldDescriptors = {};
 
 			this.keepTopicUntil( function() {
-				var newField;
-				try{
-					newField = new ModelField( typeSpec, subFieldDescriptors );
-				} catch( e ) {
+				var newField  = tryToBuildSubField();
+				if( !newField ) {
 					return false;
 				}
-				updateModel(
-					getContext().field( currentFieldName, newField )
-				);
+				updateCurrentField = updateOuterField;
+				currentMixedField = undefined;
+				currentField = newField;
 				enterContext( newField );
-				currentSubField = newField;
-				return true;
+				updateCurrentField( newField );
 			} );
 		} );
 
-		// .type1.[...].or.as."type2" => mixed type:
+		// .type1.[...].or.as."type2" => mixed type (type1 & type2):
 		declare( typeName )( function() {
 			this.continueIf( withinContextOf( ModelField ) );
 			this.continueIf( this.comesFrom( 'or.as' ) );
@@ -342,48 +391,46 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			this.startTopic( 'field' );
 			backIntoContextOf( ModelField );
 
-			var currentField = getContext();
-			currentFieldType = typeSpec;
+			subFieldType = typeSpec;
 			subFieldDescriptors = {};
 
 			this.keepTopicUntil( function() {
-				var newField;
-				try{
-					newField = new ModelField( typeSpec, subFieldDescriptors );
-				} catch( e ) {
+				var newField = tryToBuildSubField();
+				if( !newField ) {
 					return false;
 				}
-				var mixedField = new ModelField( mixedType, {
-					restrictedTo: [
-						currentField,
-						newField
-					]
-				} );
-				updateModel(
-					currentModel.field( currentFieldName, mixedField )
-				);
-				updateContext( mixedField );
-				currentSubField = newField;
-				return true;
+				if( !currentMixedField ) {
+					newMixedFieldFromCurrentFieldAndNewField( newField );
+				} else {
+					addFieldToCurrentMixedField( newField );
+				}
 			} );
 		} );
 
-		var descriptorNames = _.keys( typeSpec.descriptors() );
 		_.each( typeSpec.descriptors(), function( descriptor, descriptorName ) {
-			var otherDescriptorNames = _.without( descriptorName, descriptorNames );
-
 			// .type."descriptor1( value )"[ ."descriptorN( value )" ... ]
 			declare( descriptorName ).with.topic( 'field' )( function( descriptorValue ) {
-				this.continueIf( currentFieldType === typeSpec );
-//				this.continueIf(
-//					this.comesFrom( typeName )
-//					|| this.comesFrom( otherDescriptorNames )
-//				);
+				this.continueIf( subFieldType === typeSpec );
 				subFieldDescriptors[ descriptorName ] = descriptorValue;
 			} );
+
+			// .type."optionalDescriptor1( value )"[ ."optionalDescriptorN( value )" ... ]
+			declare( descriptorName )( function( descriptorValue ) {
+				this.continueIf( subFieldType === typeSpec );
+				// TODO: this.continueIf( Comes from typeSpec word or another descriptor of same type. )
+				subFieldDescriptors[ descriptorName ] = descriptorValue;
+
+				this.startTopic( 'field' ).keepTopicUntil( function() {
+					var updatedField = tryToBuildSubField();
+					if( !updatedField ) {
+						// might happen if one descriptor is optional but only goes together with
+						// a 2nd descriptor which has not been set yet
+						return false;
+					}
+					updateCurrentField( updatedField );
+				} );
+			} );
 		} );
-
-
 
 // TODO: logical validators should be out of this so they won't be created as functions but instead
 //       as getters. Without this distinction, or() will conflict with other context or usage above.
@@ -393,15 +440,87 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 				this.continueIf( getContext().typeSpec() === typeSpec );
 
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
-				getContext().addAssertion( assertion );
 
 				// TODO: handle properties, e.g. 'length': .with.length.between(...)
 			} );
 		} );*/
 
-		declare( 'with' )( function() {
-			this.continueIf( inContextOf( ModelField ) );
-			this.continueIf( this.comesFrom( TYPE_NAMES ) );
-		} );
+//		declare( 'with' )( function() {
+//			this.continueIf( inContextOf( ModelField ) );
+//			this.continueIf( this.comesFrom( TYPE_NAMES ) );
+//		} );
 	} );
+
+	function updateOuterField( newField ) {
+		updateModel(
+			currentModel.field( currentFieldName, newField )
+		);
+		if( !replaceContext( currentMixedField || currentField, newField ) ) {
+			throw new Error( 'can not update field in current context' );
+		}
+		if( currentMixedField ) {
+			currentMixedField = newField;
+		} else {
+			currentField = newField;
+		}
+	}
+
+	function updateMixedFieldsMemberField( newField ) {
+		var mixedFieldRestrictions = currentMixedField.descriptors().restrictedTo;
+		mixedFieldRestrictions[
+			mixedFieldRestrictions.indexOf( currentField )
+		] = newField;
+
+		var newMixedField = new ModelField( mixedType, {
+			restrictedTo: mixedFieldRestrictions
+		} );
+
+		updateModel(
+			currentModel.field( currentFieldName, newMixedField )
+		);
+		if( !replaceContext( currentMixedField, newMixedField )
+			|| !replaceContext( currentField, newField )
+		) {
+			throw new Error( 'can not update field in current context' );
+		}
+		currentMixedField = newMixedField;
+		currentField = newField;
+	}
+
+	function newMixedFieldFromCurrentFieldAndNewField( newField ) {
+		var mixedField = new ModelField( mixedType, {
+			restrictedTo: [
+				currentField,
+				newField
+			]
+		} );
+		updateOuterField( mixedField );
+		updateContext( mixedField );
+		enterContext( newField );
+		currentMixedField = mixedField;
+		currentField = newField;
+
+		updateCurrentField = updateMixedFieldsMemberField;
+		updateCurrentField( newField );
+	}
+
+	function addFieldToCurrentMixedField( newField ) {
+		var mixedFieldRestrictions = currentMixedField.descriptors().restrictedTo;
+		mixedFieldRestrictions.push( newField );
+
+		var newMixedField = new ModelField( mixedType, {
+			restrictedTo: mixedFieldRestrictions
+		} );
+
+		updateOuterField( newMixedField );
+		currentField = newField;
+	}
+
+	function tryToBuildSubField() {
+		try{
+			return new ModelField( subFieldType, subFieldDescriptors );
+		} catch( e ) {
+			return false;
+		}
+	}
 };
