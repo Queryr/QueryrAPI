@@ -198,6 +198,41 @@ var designs = {
 					]
 				} ) )
 		)
+	],
+	'with "length" field as number and field length restriction between 1 and 1000': [
+		function() {
+			this
+				.field( 'length' ).as.number
+					.between( 1, 1000 );
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'length', new ModelField(
+					types.number,
+					{},
+					new Assertion( 'between', [ Assertion.unknown, 1, 1000 ] )
+				) )
+		)
+	],
+	'with "foo" field as string or as number restricted to value between 1 and 1000': [
+		function( newCase ) {
+			newCase()
+				.field( 'foo' )
+					.as.number.between( 1, 1000 )
+					.or
+					.as.string;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'foo', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.number, {},
+							new Assertion( 'between', [ Assertion.unknown, 1, 1000 ] )
+						)
+					]
+				} ) )
+		)
 	]
 };
 

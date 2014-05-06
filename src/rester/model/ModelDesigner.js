@@ -432,18 +432,28 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 			} );
 		} );
 
-// TODO: logical validators should be out of this so they won't be created as functions but instead
-//       as getters. Without this distinction, or() will conflict with other context or usage above.
-/*		typeSpec.validators().each( function( validator, validatorName ) {
+		typeSpec.validators().each( function( validator, validatorName ) {
+			if( [ 'or', 'and' ].indexOf( validatorName ) !== -1 ) {
+				// TODO: filter all logic validators in a nicer way
+				return;
+			}
 			declare( validatorName ).as.function( function() {
 				this.continueIf( inContextOf( ModelField ) );
-				this.continueIf( getContext().typeSpec() === typeSpec );
+				this.continueIf( getContext().type() === typeSpec );
 
+				var updatedField;
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
+
+				if( !getContext().assertion() ) {
+					updatedField = getContext().assertion( assertion );
+				} else {
+					throw new Error( 'multiple assertions per field not supported yet' );
+				}
+				updateCurrentField( updatedField );
 
 				// TODO: handle properties, e.g. 'length': .with.length.between(...)
 			} );
-		} );*/
+		} );
 
 //		declare( 'with' )( function() {
 //			this.continueIf( inContextOf( ModelField ) );
