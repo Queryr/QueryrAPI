@@ -437,18 +437,27 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 				// TODO: filter all logic validators in a nicer way
 				return;
 			}
+
 			declare( validatorName ).as.function( function() {
 				this.continueIf( inContextOf( ModelField ) );
 				this.continueIf( getContext().type() === typeSpec );
 
 				var updatedField;
+				var currentAssertion = getContext().assertion();
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
 
-				if( !getContext().assertion() ) {
-					updatedField = getContext().assertion( assertion );
-				} else {
-					throw new Error( 'multiple assertions per field not supported yet' );
+				if( currentAssertion ) {
+					if( currentAssertion.getType() === 'and' ) {
+						assertion = new Assertion(
+							'and', currentAssertion.getDescriptors().concat( [ assertion ] )
+						);
+					} else {
+						assertion = new Assertion(
+							'and', [ currentAssertion, assertion ]
+						);
+					}
 				}
+				updatedField = getContext().assertion( assertion );
 				updateCurrentField( updatedField );
 
 				// TODO: handle properties, e.g. 'length': .with.length.between(...)

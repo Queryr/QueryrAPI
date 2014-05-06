@@ -220,7 +220,14 @@ var designs = {
 				.field( 'foo' )
 					.as.number.between( 1, 1000 )
 					.or
-					.as.string;
+					.as.string
+			;
+			newCase()
+				.field( 'foo' )
+					.as.string
+					.or
+					.as.number.between( 1, 1000 )
+			;
 		},
 		new ModelDesign(
 			new ModelFieldMap()
@@ -230,6 +237,43 @@ var designs = {
 						new ModelField( types.number, {},
 							new Assertion( 'between', [ Assertion.unknown, 1, 1000 ] )
 						)
+					]
+				} ) )
+		)
+	],
+	'with "foo" field as string or as number with several restrictions': [
+		function( newCase ) {
+			newCase()
+				.field( 'foo' )
+					.as.string
+					.or
+					.as.number
+						.above( 0 )
+						.odd()
+						.below( 42 )
+			;
+			newCase()
+				.field( 'foo' )
+					.as.number
+						.above( 0 )
+						.odd()
+						.below( 42 )
+					.or
+					.as.string
+			;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'foo', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.number, {},
+							new Assertion( 'and', [
+								new Assertion( 'above', [ Assertion.unknown, 0 ] ),
+								new Assertion( 'odd', [ Assertion.unknown ] ),
+								new Assertion( 'below', [ Assertion.unknown, 42 ] ),
+							]
+						) )
 					]
 				} ) )
 		)
