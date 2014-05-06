@@ -35,4 +35,16 @@ describe( 'Assertion.unknown.and()', function() {
 			expect( values ).to.eql( [ Assertion.unknown, true, 1, 'foo' ] );
 		} );
 	} );
+
+	describe( 'with "arguments" object', function() {
+		var someArgs;
+		( function() {
+			someArgs = arguments;
+		}( 1, 2, 3 ) );
+		var values = Assertion.unknown.and( someArgs );
+
+		it( 'should return an array with unknown plus given values', function() {
+			expect( values ).to.eql( [ Assertion.unknown, 1, 2, 3 ] );
+		} );
+	} );
 } );

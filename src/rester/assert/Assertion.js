@@ -162,10 +162,14 @@ Assertion.unknown.only = [ Assertion.unknown ];
  */
 Assertion.unknown.and = function( values ) {
 	if( arguments.length !== 1
-		|| !Array.isArray( values )
+		|| typeof values.length !== 'number'
 	) {
 		throw new Error( 'First argument is expected to be an array of values. ' +
 			'No further arguments expected.' );
 	}
-	return [ Assertion.unknown ].concat( values );
+	var ret = [ Assertion.unknown ];
+	for( var i = 0; i < values.length; i++ ) {
+		ret.push( values[ i ] );
+	}
+	return ret;
 };
