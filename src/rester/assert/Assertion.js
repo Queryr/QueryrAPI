@@ -23,10 +23,13 @@ module.exports = Assertion;
  * @immutable
  */
 function Assertion( validationType, validationDescriptors ) {
-	validationDescriptors = validationDescriptors || [];
+	validationDescriptors = validationDescriptors || [ Assertion.unknown ];
 
-	if( typeof validationType !== 'string' ) {
+	if( typeof validationType !== 'string' || validationType.length < 1 ) {
 		throw new Error( 'validationType is expected to be a string.' );
+	}
+	if( typeof validationDescriptors !== 'object' ) {
+		throw new Error( 'validationDescriptors is expected to be an object' );
 	}
 
 	/**

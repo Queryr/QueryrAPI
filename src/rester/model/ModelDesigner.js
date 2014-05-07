@@ -438,28 +438,28 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 				return;
 			}
 
+			// .type."validator( *arg )"[ .or ]."validator( *arg )"[ ... ]
 			declare( validatorName ).as.function( function() {
 				this.continueIf( inContextOf( ModelField ) );
 				this.continueIf( getContext().type() === typeSpec );
 
-				var updatedField;
 				var currentAssertion = getContext().assertion();
 				var assertion = new Assertion( validatorName, Assertion.unknown.and( arguments ) );
 
-				if( currentAssertion ) {
-					if( currentAssertion.getType() === 'and' ) {
-						assertion = new Assertion(
-							'and', currentAssertion.getDescriptors().concat( [ assertion ] )
-						);
+				if( this.comesFrom( 'or' ) ) {
+					this.continueIf( currentAssertion );
+
+					assertion = logicalAssertion( currentAssertion, 'or', assertion );
+				}
+				else if( currentAssertion ) {
+					if( currentAssertion.getType() === 'or' ) {
+						assertion = nestedLogicalAssertion( currentAssertion, 'and', assertion );
 					} else {
-						assertion = new Assertion(
-							'and', [ currentAssertion, assertion ]
-						);
+						assertion = logicalAssertion( currentAssertion, 'and', assertion );
 					}
 				}
-				updatedField = getContext().assertion( assertion );
+				var updatedField = getContext().assertion( assertion );
 				updateCurrentField( updatedField );
-
 				// TODO: handle properties, e.g. 'length': .with.length.between(...)
 			} );
 		} );
@@ -543,3 +543,28 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		}
 	}
 };
+
+function logicalAssertion( logicalOrSingleAssertion, type, newMember ) {
+	return logicalOrSingleAssertion.getType() !== type
+		? new Assertion( type, [ logicalOrSingleAssertion, newMember ] )
+		: assertionDescriptorsPush( logicalOrSingleAssertion, newMember );
+}
+
+function nestedLogicalAssertion( aLogicalAssertion, innerAssertionType, newInnerAssertionMember ) {
+	var firstInnerAssertionMember = aLogicalAssertion.getDescriptors().pop();
+	var newFirstInnerAssertionMember = logicalAssertion(
+		firstInnerAssertionMember,
+		innerAssertionType,
+		newInnerAssertionMember
+	);
+	return new Assertion(
+		aLogicalAssertion.getType(),
+		aLogicalAssertion.getDescriptors().slice( 0, -1 ).concat( [ newFirstInnerAssertionMember ] )
+	);
+}
+
+function assertionDescriptorsPush( assertion, descriptor ) {
+	return new Assertion(
+		assertion.getType(), assertion.getDescriptors().concat( [ descriptor ] )
+	);
+}

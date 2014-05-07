@@ -270,10 +270,100 @@ var designs = {
 						new ModelField( types.number, {},
 							new Assertion( 'and', [
 								new Assertion( 'above', [ Assertion.unknown, 0 ] ),
-								new Assertion( 'odd', [ Assertion.unknown ] ),
+								new Assertion( 'odd' ),
 								new Assertion( 'below', [ Assertion.unknown, 42 ] ),
 							]
 						) )
+					]
+				} ) )
+		)
+	],
+	'with "foo" field as number with several restrictions using "or" following one assertion': [
+		function() {
+			this
+				.field( 'foo' )
+					.as.string
+					.or
+					.as.number
+							.above( 0 )
+							.odd()
+							.below( 42 )
+						.or
+							.above( 42 )
+						.or
+							.below( -42 )
+					.or
+					.as.null
+			;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'foo', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.null ),
+						new ModelField( types.number, {},
+							new Assertion( 'or', [
+								new Assertion( 'and', [
+									new Assertion( 'above', [ Assertion.unknown, 0 ] ),
+									new Assertion( 'odd' ),
+									new Assertion( 'below', [ Assertion.unknown, 42 ] ),
+								] ),
+								new Assertion( 'above', [ Assertion.unknown, 42 ] ),
+								new Assertion( 'below', [ Assertion.unknown, -42 ] )
+							] )
+						)
+					]
+				} ) )
+		)
+	],
+	'with "foo" field as number with several restrictions using "or"': [
+		function() {
+			this
+				.field( 'foo' )
+					.as.string
+					.or
+					.as.number
+							.above( 0 )
+							.odd()
+							.below( 42 )
+						.or
+							.above( 42 )
+							.even()
+							.below( 99 )
+						.or
+							.below( 0 )
+							.odd()
+							.above( -42 )
+					.or
+					.as.null
+			;
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'foo', new ModelField( types.mixed, {
+					restrictedTo: [
+						new ModelField( types.string ),
+						new ModelField( types.null ),
+						new ModelField( types.number, {},
+							new Assertion( 'or', [
+								new Assertion( 'and', [
+									new Assertion( 'above', [ Assertion.unknown, 0 ] ),
+									new Assertion( 'odd' ),
+									new Assertion( 'below', [ Assertion.unknown, 42 ] ),
+								] ),
+								new Assertion( 'and', [
+									new Assertion( 'above', [ Assertion.unknown, 42 ] ),
+									new Assertion( 'even' ),
+									new Assertion( 'below', [ Assertion.unknown, 99 ] ),
+								] ),
+								new Assertion( 'and', [
+									new Assertion( 'below', [ Assertion.unknown, 0 ] ),
+									new Assertion( 'odd' ),
+									new Assertion( 'above', [ Assertion.unknown, -42 ] ),
+								] )
+							] )
+						)
 					]
 				} ) )
 		)

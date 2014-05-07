@@ -15,7 +15,7 @@ describe( 'Assertion#equals()', function() {
 			var assertions =  [
 				[
 					new Assertion( 'foo' ),
-					new Assertion( 'foo', [] )
+					new Assertion( 'foo', [ Assertion.unknown ] )
 				],
 				new Assertion( 'ok', [ true ] ),
 				new Assertion( 'ok', [ Assertion.unknown ] ),
