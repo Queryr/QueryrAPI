@@ -30,11 +30,11 @@ describe( 'ModelDesigner constructor', function() {
 	} );
 
 	var failingInstantiations = {
-		'no TypeSpec array': function() {
-			new ModelDesigner();
+		'no TypeSpec array or undefined but string': function() {
+			new ModelDesigner( 'foo' );
 		},
 		'empty TypeSpec array': function() {
-			new ModelDesigner( [] );
+			new ModelDesigner( [ 'foo' ] );
 		}
 	};
 	_.each( failingInstantiations, function( instantiation, description ) {

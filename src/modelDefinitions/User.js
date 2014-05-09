@@ -7,13 +7,13 @@ module.exports = function designUser( modelDesigner ) {
 	modelDesigner.model( 'user' )
 		//.extends( QueryrModel )
 		.field( 'name' )
-			.as.string().with.length.above( 0 )
+			.as.string//.with.length.above( 0 )
 			.or
-			.as.null()
+			.as.null
 
 		.field( 'mailAddress' )
-			.as.string()
-				.is.mail()
+			.as.string
+				//.is.mail() // TODO: implement
 	;
 
 };

@@ -6,6 +6,8 @@ var Assertion = require( '../assert/Assertion' );
 var TypeSpec = require( '../typeSpeccer/TypeSpec' );
 
 /**
+ * TODO: Rename into "TypeUsage" and move into typeSpeccer package
+ *
  * Field to be used in a ModelDesign. Immutable object, all setter operations will result in the
  * creation of a new instance which will then be returned.
  *

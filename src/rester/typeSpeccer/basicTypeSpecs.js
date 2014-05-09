@@ -9,11 +9,11 @@ var BASIC_TYPES = [ // TODO: Complete list.
 	'instance'
 ];
 
-var typeSpeccer = require( '..' );
-var TypeSpec =	typeSpeccer.TypeSpec;
+var typeSpeccer = require( './index' );
+var TypeSpec = typeSpeccer.TypeSpec;
 var typeSpecCreators = typeSpeccer.typeSpecCreators;
 
-var validators = require( '../../validators' );
+var validators = require( '../validators' );
 var Validators = validators.Validators;
 
 var basicValidatorsCreator = validators.basicValidators;

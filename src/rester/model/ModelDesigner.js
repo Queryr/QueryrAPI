@@ -3,12 +3,13 @@
 var _ = require( 'underscore' );
 
 var ModelDesign = require( './ModelDesign' );
-
 var ModelField = require( './ModelField' );
+
 var Assertion = require( '../assert/Assertion' );
 var TypeSpec = require( '../typeSpeccer/TypeSpec' );
 
 var mixedType = require( '../typeSpeccer/basicTypeSpecs' ).mixed;
+var referenceType = require( './referenceTypeSpec' );
 
 var INTERNAL_ABORT = {};
 
@@ -30,15 +31,17 @@ var INTERNAL_ABORT = {};
  * @constructor
  */
 module.exports = function ModelDesigner( usableFieldTypes ) {
-	var TYPE_NAMES = _.map( usableFieldTypes || [], function( typeSpec ) {
+	usableFieldTypes = ( usableFieldTypes || [] ).concat( [ referenceType ] );
+
+	if( !_.isArray( usableFieldTypes ) ) {
+		throw new Error( 'array of TypeSpec instances or undefined expected' );
+	}
+	var TYPE_NAMES = _.map( _.unique( usableFieldTypes ), function( typeSpec ) {
 		if( !( typeSpec instanceof TypeSpec ) ) {
-			throw new Error( 'TypeSpec instance expected, other value given' );
+			throw new Error( 'TypeSpec instance expected, ' + typeSpec + ' given' );
 		}
 		return typeSpec.name();
 	} );
-	if( TYPE_NAMES.length < 1 ) {
-		throw new Error( 'ModelDesigner expects at least one TypeSpec for designing fields' );
-	}
 
 	var self = this;
 	var models = {};

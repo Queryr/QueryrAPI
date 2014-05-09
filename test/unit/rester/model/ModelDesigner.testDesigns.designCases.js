@@ -9,7 +9,7 @@ var ModelDesign = rester.model.ModelDesign;
 var ModelField = rester.model.ModelField;
 var ModelFieldMap = rester.model.ModelFieldMap;
 var Assertion = rester.assert.Assertion;
-var types = rester.typeSpeccer.basicTypeSpecs;
+var types = rester.model.modelDesignTypeSpecs;
 
 /**
  * For debugging purposes.
@@ -143,6 +143,15 @@ module.exports = {
 				} ) )
 		)
 	],
+//	'with "someRef" field as reference to another model "someModel"': [
+//		function() {
+//			this.field( 'someRef' ).as.reference.to( 'someModel' );
+//		},
+//		new ModelDesign(
+//			new ModelFieldMap()
+//				.set( 'someRef', new ModelField( types.reference, { to: 'someModel' } ) )
+//		)
+//	],
 	'with "date" field as instance of Date (required descriptor test)': [
 		function() {
 			this.field( 'date' ).as.instance.of( Date );
@@ -171,7 +180,7 @@ module.exports = {
 				} ) )
 		)
 	],
-	'with "someObj" field as Date or RegExp instance': [
+	'with "someObj" field (instance of different types or reference) and "date" field': [
 		function() {
 			this
 				.field( 'someObj' )
@@ -180,6 +189,8 @@ module.exports = {
 					.as.instance.of( RegExp )
 					.or
 					.as.instance.of( Function )
+					.or
+					.as.reference.to( 'anotherModel' )
 				.field( 'date' )
 					.as.instance.of( Date ).or.as.null
 			;
@@ -190,7 +201,8 @@ module.exports = {
 					restrictedTo: [
 						new ModelField( types.instance, { of: Date } ),
 						new ModelField( types.instance, { of: RegExp } ),
-						new ModelField( types.instance, { of: Function } )
+						new ModelField( types.instance, { of: Function } ),
+						new ModelField( types.reference, { to: 'anotherModel' } )
 					]
 				} ) )
 				.set( 'date', new ModelField( types.mixed, {

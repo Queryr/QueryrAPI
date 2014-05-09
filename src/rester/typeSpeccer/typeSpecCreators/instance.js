@@ -7,6 +7,5 @@ module.exports = function( typeSpec ) {
 		.descriptor( 'of', TypeSpec.REQUIRED_DESCRIPTOR )
 		.use( function( value, descriptors ) {
 			return value instanceof descriptors.of;
-			// TODO: Something like that^^, not really "options" since "of" is required
 		} );
 };

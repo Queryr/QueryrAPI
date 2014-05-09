@@ -11,7 +11,7 @@ var ModelDesigner = rester.model.ModelDesigner;
 var ModelDesign = rester.model.ModelDesign;
 var ModelField = rester.model.ModelField;
 var ModelFieldMap = rester.model.ModelFieldMap;
-var types = rester.typeSpeccer.basicTypeSpecs;
+var types = rester.model.modelDesignTypeSpecs; // includes "reference" type spec
 
 describe( 'ModelDesigner', function() {
 	var typesArray = _.values( types );
@@ -25,10 +25,10 @@ describe( 'ModelDesigner', function() {
 
 		describe( '#' + typeSpec.name(), function() {
 			describe( 'on instance with one usable field type "' + typeSpec.name() + '"', function() {
-				_.each( _.without( typesArray, typeSpec ), function( otherTypeSpec ) {
+				_.each( _.without( typesArray, typeSpec, types.reference ), function( otherTypeSpec ) {
 					it(
-						'is the only member for modelling a field type; "'
-							+ otherTypeSpec.name() + '" is undefined',
+						'is the only member besides "reference" type (which is default) for '
+							+ ' modelling a field type; "' + otherTypeSpec.name() + '" is undefined',
 						function() {
 							expect( designerOfSingleType[ otherTypeSpec.name() ] ).to.be( undefined );
 						}
