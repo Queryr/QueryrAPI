@@ -4,6 +4,8 @@ var expect = require( 'expect.js' );
 var _ = require( 'underscore' );
 var chain = require( '../../../../src/chainy' );
 
+var itThrowsErrorInDslContext = require( './describe/itThrowsErrorInDslContext' );
+
 var rester = require( '../../../../' ).rester;
 var ModelDesigner = rester.model.ModelDesigner;
 var ModelDesign = rester.model.ModelDesign;
@@ -35,11 +37,11 @@ describe( 'ModelDesigner', function() {
 
 				itIsADefinedGetter( designerOfSingleType, typeSpec.name() );
 
-				describeMemberThrowingErrorInDslContext(
+				itThrowsErrorInDslContext(
 					chain( newDesigner() )( typeSpec.name() )
 				);
 
-				describeMemberThrowingErrorInDslContext(
+				itThrowsErrorInDslContext(
 					chain( newDesigner() )( 'model' )( typeSpec.name() )
 				);
 			} );
@@ -47,26 +49,6 @@ describe( 'ModelDesigner', function() {
 			itIsADefinedGetter( newDesigner(), typeSpec.name() );
 		} );
 	} );
-
-	function describeMemberThrowingErrorInDslContext( dslChain ) {
-		var contextPathPieces = dslChain.pieces().slice( 1, -1 );
-		var contextPath = _.map( contextPathPieces, function( piece ) {
-			if( !( piece instanceof chain.ContextMemberPiece ) ) {
-				throw new Error( 'expected a chain of member functions executed on the context object' );
-			}
-			return '#' + piece.memberName + '(' + piece.memberCallArgs.length + ' args)';
-		} );
-		it( 'throws an error if invoked after ' + contextPath, function() {
-			dslChain.go( function( step ) {
-				if( step.isLast ) {
-					expect( step ).to.throwError();
-				}
-				else {
-					expect( step ).to.not.throwError();
-				}
-			} );
-		} );
-	}
 } );
 
 function itIsADefinedGetter( object, getterName ) {

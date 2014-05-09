@@ -107,7 +107,7 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		return sentence[ sentence.length - 2 ];
 	}
 	function getCurrentWord() {
-		return sentence[ sentence.length -1 ];
+		return sentence[ sentence.length - 1 ];
 	}
 	var currentTopic = '';
 	var currentTopicStopper = [];
@@ -279,9 +279,16 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	 */
 	var updateCurrentField;
 
+	function resetDesignState() {
+		context = [];
+		sentence = [];
+		updateCurrentField = currentMixedField = currentField = currentModel = updateModel
+			= undefined;
+	}
+
 	/**
 	 * Defines a new ModelDesign instance and stores it under the given name (optional).
-	 * If no name is given, the ModelDesign instance can be received by #designTemplate().
+	 * If no name is given, the ModelDesign instance can be received by #design().
 	 *
 	 * @param {string} [name]
 	 * @param {ModelDesign} [baseModel] Can be used to define a model based on a given ModelDesign.
@@ -298,6 +305,8 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 		} else {
 			baseModel = new ModelDesign();
 		}
+
+		resetDesignState();
 
 		updateModel = function( model ) {
 			if( name !== undefined ) {
@@ -320,6 +329,10 @@ module.exports = function ModelDesigner( usableFieldTypes ) {
 	this.design = function() {
 		if( !currentModel ) {
 			throw new Error( 'no model is currently being designed' );
+		}
+		if( currentTopic ) {
+			throw new Error(
+				'can not receive model while in the middle of "' + currentTopic + '" declaration' );
 		}
 		return currentModel;
 	};
