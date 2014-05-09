@@ -3,6 +3,8 @@
 module.exports = ModelDesign;
 
 var ModelFieldMap = require( './ModelFieldMap' );
+var referenceType = require( './referenceTypeSpec' );
+var mixedType = require( '../typeSpeccer/basicTypeSpecs' ).mixed;
 
 /**
  * Describes a model. Basically what fields a model has and what kind of values those fields accept.
@@ -64,5 +66,39 @@ function ModelDesign( fields ) {
 			return false;
 		}
 		return fields.equals( other.fields() );
+	};
+
+	/**
+	 * Returns a list of other model design names this ModelDesign instance has references to.
+	 *
+	 * TODO: This is quick and dirty, should embrace open/closed principle for supporting other
+	 *  field types which might hold references as well. => Move into a service. Would also be nice
+	 *  To have a service to get references per ModelField already.
+	 */
+	this.modelReferences = function() {
+		var extractReferencesFrom = function( field ) {
+			switch( field.type() ) {
+				case mixedType:
+					var references = [];
+					var fieldsFields = field.descriptors().restrictedTo;
+					for( var i = 0; i < fieldsFields.length; i++ ) {
+						var fieldsFieldReferences = extractReferencesFrom( fieldsFields[ i ] );
+						references = references.concat( fieldsFieldReferences );
+					}
+					return references;
+				case referenceType:
+					return [ field.descriptors().to ];
+			}
+			return [];
+		};
+		var references = [];
+		fields.each( function( field ) {
+			var extractedReferences = extractReferencesFrom( field );
+			for( var i = 0; i < extractedReferences.length; i++ ) {
+				references.indexOf( extractedReferences[ i ] ) === -1
+					&& references.push( extractedReferences[ i ] );
+			}
+		} );
+		return references;
 	};
 }

@@ -143,15 +143,15 @@ module.exports = {
 				} ) )
 		)
 	],
-//	'with "someRef" field as reference to another model "someModel"': [
-//		function() {
-//			this.field( 'someRef' ).as.reference.to( 'someModel' );
-//		},
-//		new ModelDesign(
-//			new ModelFieldMap()
-//				.set( 'someRef', new ModelField( types.reference, { to: 'someModel' } ) )
-//		)
-//	],
+	'with "someRef" field as reference to another model "someModel"': [
+		function() {
+			this.field( 'someRef' ).as.reference.to( 'someModel' );
+		},
+		new ModelDesign(
+			new ModelFieldMap()
+				.set( 'someRef', new ModelField( types.reference, { to: 'someModel' } ) )
+		)
+	],
 	'with "date" field as instance of Date (required descriptor test)': [
 		function() {
 			this.field( 'date' ).as.instance.of( Date );
