@@ -100,11 +100,13 @@ function chainy() {
 	function buildStepFnObj( i, stepContext, doneFn ) {
 		var chainPiece = chainPieces[ i ];
 
+		var enteredStep = false;
 		var step = function step() {
-			if( step.returnValue || step.error ) {
+			if( enteredStep ) {
 				throw new Error(
 					'the chain\'s step with index ' + i + ' has already been executed' );
 			}
+			enteredStep = true;
 
 			try {
 				step.returnValue = chainPiece.step( step );
@@ -120,6 +122,7 @@ function chainy() {
 			isLast: i === chainPieces.length - 1,
 			isFirst: i === 0,
 			index: i,
+			indexFromEnd: -( chainPieces.length - i ),
 			context: stepContext,
 			returnValue: undefined,
 			error: undefined
@@ -174,16 +177,24 @@ chainy.ContextMemberPiece = chainy.Piece.extend( function ContextMemberPiece( me
 			throw new Error( 'Can not call function "' + memberName + '" on undefined. '
 				+ 'Define the chain\'s initial input first.' );
 		}
-		if( !_.isFunction( input[ step.memberName ] ) ) {
+		var member = input[ step.memberName ];
+		if( member === undefined ) {
+			throw new Error( 'current context object has no member "' + step.memberName + '"' );
+		}
+		var memberIsFn = step.memberIsFunction = _.isFunction( member );
+		if( step.args.length && !memberIsFn ) {
 			throw new Error( 'current context object has no member function "'
 				+ step.memberName + '"');
 		}
-		return input[ step.memberName ].apply( input, step.args );
+		return memberIsFn
+			? input[ step.memberName ].apply( input, step.args )
+			: member;
 	};
 
 	this.decorateStep = function( step ) {
 		step.args = args;
 		step.memberName = memberName;
+		step.memberIsFunction = undefined; // set during step
 	};
 
 	this.memberName = memberName;
@@ -206,7 +217,7 @@ chainy.CallbackPiece = chainy.Piece.extend( function CallbackPiece( callback ) {
 	}
 
 	this.step = function( step ) {
-		return callback.call( step.context || null, step.args );
+		return callback.apply( step.context || null, step.args );
 	};
 	this.decorateStep = function( step ) {
 		step.args = [ step ];

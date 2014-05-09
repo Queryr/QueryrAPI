@@ -13,11 +13,15 @@ describe( 'chainy()', function() {
 		obj2: new chainy.ContextChangePiece( {} ),
 		memberA: new chainy.ContextMemberPiece( 'a' ),
 		memberB: new chainy.ContextMemberPiece( 'b' ),
-		callback: new chainy.CallbackPiece( function() {} )
+		callback: ( function() {
+			var callbackSpy = sinon.spy( function() {
+				return this;
+			} );
+			var piece = new chainy.CallbackPiece( callbackSpy );
+			piece.testSpy = callbackSpy;
+			return piece;
+		}() )
 	};
-	_.each( pieces, function( value, key ) {
-		value.debugId = key;
-	} );
 
 	describe( 'returned function', function() {
 		it( 'is a function', function() {
@@ -68,16 +72,6 @@ describe( 'chainy()', function() {
 		} );
 	} );
 
-	describe( '#go()', function() {
-		it( 'throws error if chain requires member call on non-existent member', function() {
-			expect( function() {
-				chainy( {} )( 'foo' ).go();
-			} ).to.throwError( function( e ) {
-				expect( e ).to.be.a( chainy.StepError );
-			} );
-		} );
-	} );
-
 	describe( '#go( stepsCallback )', function() {
 		var objSpy;
 		var obj;
@@ -89,10 +83,16 @@ describe( 'chainy()', function() {
 			} );
 			obj = {
 				a: objSpy,
-				b: objSpy,
-				c: objSpy
+				b: objSpy
 			};
+			Object.defineProperty( obj, 'c', {
+				value: objSpy
+			} );
 			chain = chainy( 'a' )( 'b' )( 'c' ).on( obj );
+		} );
+
+		it( 'returns the chainy object', function() {
+			expect( chain.go( function( step ) { step(); } ) ).to.be( chain );
 		} );
 
 		it( 'stops if stepsCallback\'s first argument won\'t be called', function() {
@@ -119,8 +119,8 @@ describe( 'chainy()', function() {
 						isFirst = true; // first piece is ContextChangePiece
 						break;
 				}
-					expect( step.isFirst ).to.be( isFirst );
-					expect( step.isLast ).to.be( isLast );
+				expect( step.isFirst ).to.be( isFirst );
+				expect( step.isLast ).to.be( isLast );
 
 				i++;
 				step();
@@ -146,6 +146,37 @@ describe( 'chainy()', function() {
 	} );
 
 	describe( '#go()', function() {
+		it( 'returns the chainy object', function() {
+			var chain = chainy( [] );
+			expect( chain( 'push', [ 1 ] ).go() ).to.be( chain );
+		} );
+
+		it( 'throws error if chain requires member call on non-existent member', function() {
+			expect( function() {
+				chainy( {} )( 'foo' ).go();
+			} ).to.throwError( function( e ) {
+				expect( e ).to.be.a( chainy.StepError );
+			} );
+		} );
+
+		describe( 'on chain with "CallbackPiece" pieces', function() {
+			it( 'calls callback once with step argument', function() {
+				chainy( {} )( pieces.callback ).go();
+				expect( pieces.callback.testSpy.calledOnce ).to.be.ok();
+				expect( pieces.callback.testSpy.calledWith( sinon.match.typeOf( 'function' ) ) ).to.be.ok();
+			} );
+
+			it(
+				'throws an error if callback executes step argument because the callback itself ' +
+					'is the step already',
+				function() {
+					chainy( {} )( function( step ) {
+						expect( step ).to.throwError();
+					} ).go();
+				}
+			);
+		} );
+
 		var chainPiecesDefinitions = [
 			[
 				[ 'I' ],
