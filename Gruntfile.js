@@ -5,12 +5,22 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-mocha-test');
 
-	grunt.registerTask('default', ['jshint', 'nodeunit']);
+	grunt.registerTask('default', ['jshint', 'nodeunit', 'mochaTest']);
+	grunt.registerTask('mocha', ['mochaTest']);
+	grunt.registerTask('test', ['mocha', 'nodeunit']);
 
 	grunt.initConfig({
 		nodeunit: {
 			files: ['test/**/*Test.js']
+		},
+
+		mochaTest: {
+			test: {
+				src: ['test/unit/**/*.test*.js'], // TODO: use regex for last * only to match [a-zA-Z]
+				options: {}
+			}
 		},
 
 		jshint: {
@@ -31,19 +41,19 @@ module.exports = function(grunt) {
 		watch: {
 			all: {
 				files: ['**/*.js'],
-				tasks: ['jshint', 'nodeunit']
+				tasks: ['jshint', 'nodeunit', 'mochaTest']
 			},
 			projectBase: {
 				files: '<%= jshint.projectBase.src %>',
-				tasks: ['jshint:projectBase', 'nodeunit']
+				tasks: ['jshint:projectBase', 'nodeunit', 'mochaTest']
 			},
 			src: {
 				files: '<%= jshint.src.src %>',
-				tasks: ['jshint:src', 'nodeunit']
+				tasks: ['jshint:src', 'nodeunit', 'mochaTest']
 			},
 			test: {
 				files: '<%= jshint.test.src %>',
-				tasks: ['jshint:test', 'nodeunit']
+				tasks: ['jshint:test', 'nodeunit', 'mochaTest']
 			}
 		}
 	});
